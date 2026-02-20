@@ -13,6 +13,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+
+const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
+  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.ceil(radius / 2),
+  },
+}) as any;
 import { getMeals, deleteMeal, getGroceryList, saveGroceryList, Meal, GroceryItem, getWeekDates, getDayName } from '@/lib/storage';
 import * as Crypto from 'expo-crypto';
 
@@ -255,11 +266,7 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     backgroundColor: Colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...createShadow(0.06, 3, 1),
   },
   tabText: {
     fontSize: 13,

@@ -141,7 +141,7 @@ export default function SafetyScreen() {
             </View>
 
             {showAdd && (
-              <Animated.View entering={FadeInDown.duration(300)} style={styles.addForm}>
+              <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.duration(300) : undefined} style={styles.addForm}>
                 <TextInput
                   style={styles.input}
                   placeholder="Name"

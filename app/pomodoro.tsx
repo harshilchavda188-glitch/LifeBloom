@@ -13,6 +13,17 @@ import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 
+const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
+  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.ceil(radius / 2),
+  },
+}) as any;
+
 const MODES = [
   { key: 'focus', label: 'Focus', minutes: 25, color: '#D4637A' },
   { key: 'short', label: 'Short Break', minutes: 5, color: '#4CAF82' },
@@ -259,11 +270,7 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    ...createShadow(0.15, 8, 4),
   },
   statsRow: {
     flexDirection: 'row',

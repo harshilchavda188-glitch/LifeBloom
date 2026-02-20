@@ -14,6 +14,17 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
+
+const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
+  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.ceil(radius / 2),
+  },
+}) as any;
 import { getExpenses, deleteExpense, Expense, getToday, formatINR } from '@/lib/storage';
 
 const EXPENSE_CATEGORIES = [
@@ -157,7 +168,7 @@ export default function BudgetScreen() {
         renderItem={({ item, index }) => {
           const catInfo = EXPENSE_CATEGORIES.find(c => c.key === item.category);
           return (
-            <Animated.View entering={FadeInDown.delay(index * 30).duration(200)}>
+            <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(index * 30).duration(200) : undefined}>
               <Pressable
                 onLongPress={() => removeExpense(item.id)}
                 style={({ pressed }) => [styles.txCard, pressed && { opacity: 0.9 }]}
@@ -311,11 +322,7 @@ const styles = StyleSheet.create({
   },
   filterBtnActive: {
     backgroundColor: Colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...createShadow(0.06, 3, 1),
   },
   filterText: {
     fontSize: 13,

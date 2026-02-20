@@ -13,6 +13,17 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
+
+const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
+  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.ceil(radius / 2),
+  },
+}) as any;
 import { getTasks, updateTask, deleteTask, Task, getToday } from '@/lib/storage';
 
 const CATEGORIES = [
@@ -152,7 +163,7 @@ export default function TasksScreen() {
           </View>
         }
         renderItem={({ item, index }) => (
-          <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
+          <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(index * 50).duration(300) : undefined}>
             <Pressable
               onPress={() => toggleTask(item.id)}
               onLongPress={() => removeTask(item.id)}
@@ -261,11 +272,7 @@ const styles = StyleSheet.create({
   },
   viewTabActive: {
     backgroundColor: Colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...createShadow(0.06, 3, 1),
   },
   viewTabText: {
     fontSize: 13,

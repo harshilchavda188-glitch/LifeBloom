@@ -109,7 +109,7 @@ export default function HomeManageScreen() {
         ListHeaderComponent={
           <>
             {showAdd && (
-              <Animated.View entering={FadeInDown.duration(300)} style={styles.addForm}>
+              <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.duration(300) : undefined} style={styles.addForm}>
                 <TextInput
                   style={styles.input}
                   placeholder="Task name (e.g., Clean kitchen shelves)"
@@ -171,7 +171,7 @@ export default function HomeManageScreen() {
         renderItem={({ item, index }) => {
           const isDue = item.nextDue <= today;
           return (
-            <Animated.View entering={FadeInDown.delay(index * 50).duration(300)}>
+            <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(index * 50).duration(300) : undefined}>
               {index === dueTasks.length && upcomingTasks.length > 0 && (
                 <Text style={styles.sectionLabel}>Upcoming</Text>
               )}

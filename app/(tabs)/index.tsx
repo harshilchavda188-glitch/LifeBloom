@@ -15,6 +15,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+
+const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
+  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.ceil(radius / 2),
+  },
+}) as any;
 import { useAuth } from '@/lib/auth-context';
 import { getTasks, getExpenses, getWaterLog, getToday, formatINR, Task, Expense } from '@/lib/storage';
 import { useFocusEffect } from 'expo-router';
@@ -79,7 +90,7 @@ export default function HomeScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+      <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(500) : undefined}>
         <LinearGradient
           colors={['#D4637A', '#E8859A', '#F4A261']}
           start={{ x: 0, y: 0 }}
@@ -117,7 +128,7 @@ export default function HomeScreen() {
         </LinearGradient>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+      <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(200).duration(500) : undefined}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActions}>
           <QuickAction
@@ -153,7 +164,7 @@ export default function HomeScreen() {
         </ScrollView>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+      <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(300).duration(500) : undefined}>
         <Text style={styles.sectionTitle}>Budget Overview</Text>
         <View style={styles.budgetCard}>
           <View style={styles.budgetRow}>
@@ -184,7 +195,7 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(400).duration(500)}>
+      <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(400).duration(500) : undefined}>
         <Text style={styles.sectionTitle}>Today's Tasks</Text>
         {todayTasks.length === 0 ? (
           <View style={styles.emptyCard}>
@@ -214,7 +225,7 @@ export default function HomeScreen() {
         )}
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(500).duration(500)}>
+      <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(500).duration(500) : undefined}>
         <Text style={styles.sectionTitle}>Modules</Text>
         <View style={styles.modulesGrid}>
           <ModuleCard
@@ -477,13 +488,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   moduleCard: {
-    width: '47%',
+    flexBasis: '45%',
+    flexGrow: 1,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
-    flexGrow: 1,
     marginHorizontal: 4,
   },
   moduleIcon: {

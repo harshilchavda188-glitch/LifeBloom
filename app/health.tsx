@@ -103,7 +103,7 @@ export default function HealthScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInDown.delay(100).duration(400)}>
+        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(400) : undefined}>
           <LinearGradient
             colors={['#5B9BD5', '#4A90D9']}
             start={{ x: 0, y: 0 }}
@@ -146,7 +146,7 @@ export default function HealthScreen() {
           </LinearGradient>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(200).duration(400) : undefined}>
           <View style={styles.moodSection}>
             <Text style={styles.sectionTitle}>How are you feeling?</Text>
             <View style={styles.moodRow}>
@@ -171,7 +171,7 @@ export default function HealthScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(300).duration(400)}>
+        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(300).duration(400) : undefined}>
           <View style={styles.historySection}>
             <Text style={styles.sectionTitle}>Mood History</Text>
             {last7.length === 0 ? (
@@ -206,7 +206,7 @@ export default function HealthScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(400).duration(400) : undefined}>
           <View style={styles.tipsCard}>
             <Ionicons name="bulb" size={20} color={Colors.accent} />
             <View style={{ flex: 1 }}>

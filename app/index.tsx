@@ -17,6 +17,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
+
+const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
+  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: radius,
+    elevation: Math.ceil(radius / 2),
+  },
+}) as any;
 import { useAuth } from '@/lib/auth-context';
 
 const { width } = Dimensions.get('window');
@@ -98,7 +109,7 @@ export default function AuthScreen() {
           end={{ x: 1, y: 1 }}
           style={[styles.header, { paddingTop: insets.top + 40 }]}
         >
-          <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+          <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(600) : undefined}>
             <View style={styles.logoContainer}>
               <Ionicons name="flower-outline" size={48} color="#fff" />
             </View>
@@ -108,7 +119,7 @@ export default function AuthScreen() {
         </LinearGradient>
 
         <Animated.View
-          entering={FadeInUp.delay(300).duration(600)}
+          entering={Platform.OS !== 'web' ? FadeInUp.delay(300).duration(600) : undefined}
           style={styles.formContainer}
         >
           <View style={styles.tabRow}>
@@ -273,11 +284,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: Colors.surface,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    ...createShadow(0.08, 4, 1),
   },
   tabText: {
     fontSize: 15,
