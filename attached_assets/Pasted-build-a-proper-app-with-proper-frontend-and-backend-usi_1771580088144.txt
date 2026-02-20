@@ -1,0 +1,190 @@
+build a proper app with proper frontend and backend using this promt and all function using this promt"builda android app using this "Women Daily Life Management App - Development Tasks
+MVP Phase
+[/] Project Setup & Architecture
+ Review and update database schema (Drizzle ORM) for new features
+ Configure navigation for new modules
+ 1. Task Management
+ Create Task data model (tasks, categories, recurring rules)
+ Implement Task List UI (Daily/Weekly/Monthly view)
+ Add Create/Edit Task functionality
+ Implement Task Categories (Office, Home, Kids, etc.)
+ 2. Budget & Finance Management
+ Create Finance data model (expenses, income, budgets)
+ Implement Expense Tracker UI
+ Add Budget Planning UI
+ Create Analytics Dashboard (Income vs Expense)
+ 3. Kitchen & Meal Management
+ Create Meal/pantry data model
+ Implement Meal Planner UI (Weekly grid)
+ Implement Grocery List Generator
+ Create Recipe Management UI
+ 4. Home Management
+ Create Home management data model (cleaning tasks, maintenance)
+ Implement Cleaning Schedule Planner
+ Create Maintenance Reminder system
+[/] 5. Safety Features (Critical)
+ Create Emergency Contact data model
+ Implement Safety Screen with SOS Button
+ Implement Emergency Contact management
+ Simulate Location Sharing logic
+ 6. Reminder System
+ Implement centralized notification/reminder logic
+ Integrate with Tasks and Events
+ 7. Health & Wellness
+ Water intake, Fitness, Mood tracking
+ 8. Work-Life Balance
+ Pomodoro timer, Stress management
+ 9. Family Management
+ Family schedules
+Polish & UI
+ Apply "Modern, Beautiful, Premium" design system
+ Ensure responsive layout for Web and Mobile""
+🌸 Core Features for Women Daily Life Management App
+1️⃣ Daily Task Management
+
+✅ To-Do List (daily, weekly, monthly)
+
+⏰ Smart reminders & notifications
+
+📅 Calendar integration
+
+🔁 Recurring tasks (e.g., pay bills, grocery shopping)
+
+🏷 Task categories:
+
+Office
+
+Home
+
+Kids
+
+Personal care
+
+Health
+
+📊 Productivity tracker
+
+2️⃣ Kitchen & Meal Management
+
+🍳 Weekly meal planner
+
+🛒 Grocery list generator (auto from meal plan)
+
+📦 Pantry inventory tracker
+
+⏳ Expiry date reminders
+
+💡 Recipe suggestions based on available ingredients
+
+📑 Save favorite recipes
+
+💰 Budget-friendly meal suggestions
+
+3️⃣ Home Management
+
+🧹 Cleaning schedule planner
+
+🛠 Maintenance reminders (AC service, plumbing, etc.)
+
+👩‍🔧 Service provider contacts storage
+
+📋 Household checklist
+
+🧺 Laundry scheduler
+
+4️⃣ Budget & Finance Management 💰
+
+💳 Expense tracker
+
+📊 Monthly budget planner
+
+📈 Income vs Expense analytics
+
+🧾 Bill payment reminders
+
+🎯 Savings goal tracker
+
+💎 Emergency fund tracker
+
+🏦 EMI & loan tracker
+
+📉 Spending insights (where money is going)
+
+5️⃣ Health & Wellness
+
+💧 Water intake reminder
+
+🏃 Fitness tracker
+
+🩺 Doctor appointment reminders
+
+🧘 Self-care reminder
+
+🌸 Period tracker (optional feature)
+
+😌 Mood tracker
+
+6️⃣ Work-Life Balance Tools
+
+⏱ Focus timer (Pomodoro)
+
+📌 Priority task suggestions
+
+🔔 Work-hour boundary reminder
+
+🧠 Stress management tips
+
+7️⃣ Family & Kids Management (Optional)
+
+🏫 School schedule tracker
+
+📚 Homework reminders
+
+💉 Vaccination tracker
+
+🎉 Birthday reminders
+
+8️⃣ Safety Features (Very Important ⭐)
+
+🚨 Emergency SOS button
+
+📍 Live location sharing
+
+☎ Emergency contact list
+
+9️⃣ Community & Support (Optional Advanced Feature)
+
+👩 Women community forum
+
+💬 Ask questions (finance, career, home)
+
+🎓 Expert advice section
+
+🛍 Deals & offers for women products
+
+🔟 Smart AI Features (Advanced Version)
+
+🤖 AI daily schedule suggestion
+
+📊 Smart budget recommendations
+
+🥗 Personalized meal plans
+
+🧠 Productivity insights
+
+🎯 MVP (Minimum Version) – Start With This
+
+If you are just starting, implement:
+
+Task Manager
+
+Budget Tracker
+
+Meal Planner
+
+Home Cleaning Schedule
+
+Reminder System
+
+Then gradually add advanced features.
+mkae this to have to have a log in page a full security  and a expo in the og in page that work on my mobile and solve all error and the montjhly incon=me in inr
