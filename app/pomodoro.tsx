@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,13 +33,24 @@ const MODES = [
 
 export default function PomodoroScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [mode, setMode] = useState(0);
   const [seconds, setSeconds] = useState(MODES[0].minutes * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessions, setSessions] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progress = useSharedValue(0);
+  const modeRef = useRef(0);
   const webTopPad = Platform.OS === 'web' ? 67 : 0;
+
+  const isLargeScreen = width > 768;
+  const contentWidth = isLargeScreen ? 600 : width;
+  const horizontalPadding = isLargeScreen ? (width - contentWidth) / 2 : 0;
+
+  // Keep mode ref up to date for interval callback
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
 
   const currentMode = MODES[mode];
   const totalSeconds = currentMode.minutes * 60;
@@ -47,6 +59,17 @@ export default function PomodoroScreen() {
     progress.value = withTiming(1 - seconds / totalSeconds, { duration: 300 });
   }, [seconds, totalSeconds]);
 
+  // Clear interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // Timer effect with proper cleanup
   useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
@@ -54,24 +77,47 @@ export default function PomodoroScreen() {
           if (prev <= 1) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setIsRunning(false);
-            if (mode === 0) setSessions(s => s + 1);
+            if (modeRef.current === 0) {
+              setSessions(s => s + 1);
+            }
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
+
+    // Cleanup on unmount or when isRunning changes
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
-  }, [isRunning, mode]);
+  }, [isRunning]);
+
+  // Reset timer when mode changes
+  useEffect(() => {
+    if (!isRunning) {
+      setSeconds(MODES[mode].minutes * 60);
+      progress.value = 0;
+    }
+  }, [mode]);
 
   function switchMode(index: number) {
     setIsRunning(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setMode(index);
     setSeconds(MODES[index].minutes * 60);
+    progress.value = 0;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }
 
@@ -83,7 +129,12 @@ export default function PomodoroScreen() {
   function resetTimer() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsRunning(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setSeconds(currentMode.minutes * 60);
+    progress.value = 0;
   }
 
   const mins = Math.floor(seconds / 60);
@@ -94,81 +145,83 @@ export default function PomodoroScreen() {
   }));
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + webTopPad, backgroundColor: currentMode.color + '08' }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </Pressable>
-        <Text style={styles.title}>Focus Timer</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.modeRow}>
-        {MODES.map((m, i) => (
-          <Pressable
-            key={m.key}
-            onPress={() => switchMode(i)}
-            style={[
-              styles.modeBtn,
-              mode === i && { backgroundColor: m.color + '20', borderColor: m.color },
-            ]}
-          >
-            <Text style={[styles.modeText, mode === i && { color: m.color }]}>{m.label}</Text>
+    <View style={[styles.container, { paddingTop: insets.top + webTopPad, backgroundColor: currentMode.color + '08', paddingHorizontal: horizontalPadding }]}>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color={Colors.text} />
           </Pressable>
-        ))}
-      </View>
+          <Text style={styles.title}>Focus Timer</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-      <View style={styles.timerContainer}>
-        <View style={[styles.timerCircle, { borderColor: currentMode.color + '30' }]}>
-          <Text style={[styles.timerText, { color: currentMode.color }]}>
-            {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+        <View style={styles.modeRow}>
+          {MODES.map((m, i) => (
+            <Pressable
+              key={m.key}
+              onPress={() => switchMode(i)}
+              style={[
+                styles.modeBtn,
+                mode === i && { backgroundColor: m.color + '20', borderColor: m.color },
+              ]}
+            >
+              <Text style={[styles.modeText, mode === i && { color: m.color }]}>{m.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <View style={styles.timerContainer}>
+          <View style={[styles.timerCircle, { borderColor: currentMode.color + '30' }]}>
+            <Text style={[styles.timerText, { color: currentMode.color }]}>
+              {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
+            </Text>
+            <Text style={styles.timerLabel}>{currentMode.label}</Text>
+          </View>
+        </View>
+
+        <View style={styles.progressBar}>
+          <Animated.View style={[styles.progressFill, { backgroundColor: currentMode.color }, progressStyle]} />
+        </View>
+
+        <View style={styles.controls}>
+          <Pressable onPress={resetTimer} style={styles.controlBtn}>
+            <Ionicons name="refresh" size={28} color={Colors.textSecondary} />
+          </Pressable>
+          <Pressable
+            onPress={toggleTimer}
+            style={[styles.playBtn, { backgroundColor: currentMode.color }]}
+          >
+            <Ionicons
+              name={isRunning ? "pause" : "play"}
+              size={32}
+              color="#fff"
+            />
+          </Pressable>
+          <Pressable
+            onPress={() => switchMode((mode + 1) % MODES.length)}
+            style={styles.controlBtn}
+          >
+            <Ionicons name="arrow-forward" size={28} color={Colors.textSecondary} />
+          </Pressable>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={[styles.statNum, { color: currentMode.color }]}>{sessions}</Text>
+            <Text style={styles.statLabel}>Sessions</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={[styles.statNum, { color: currentMode.color }]}>{sessions * 25}</Text>
+            <Text style={styles.statLabel}>Minutes focused</Text>
+          </View>
+        </View>
+
+        <View style={styles.tipsCard}>
+          <Ionicons name="bulb" size={18} color={Colors.accent} />
+          <Text style={styles.tipsText}>
+            Work for 25 minutes, then take a 5-minute break. After 4 sessions, take a longer break.
           </Text>
-          <Text style={styles.timerLabel}>{currentMode.label}</Text>
         </View>
-      </View>
-
-      <View style={styles.progressBar}>
-        <Animated.View style={[styles.progressFill, { backgroundColor: currentMode.color }, progressStyle]} />
-      </View>
-
-      <View style={styles.controls}>
-        <Pressable onPress={resetTimer} style={styles.controlBtn}>
-          <Ionicons name="refresh" size={28} color={Colors.textSecondary} />
-        </Pressable>
-        <Pressable
-          onPress={toggleTimer}
-          style={[styles.playBtn, { backgroundColor: currentMode.color }]}
-        >
-          <Ionicons
-            name={isRunning ? "pause" : "play"}
-            size={32}
-            color="#fff"
-          />
-        </Pressable>
-        <Pressable
-          onPress={() => switchMode((mode + 1) % MODES.length)}
-          style={styles.controlBtn}
-        >
-          <Ionicons name="arrow-forward" size={28} color={Colors.textSecondary} />
-        </Pressable>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={[styles.statNum, { color: currentMode.color }]}>{sessions}</Text>
-          <Text style={styles.statLabel}>Sessions</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={[styles.statNum, { color: currentMode.color }]}>{sessions * 25}</Text>
-          <Text style={styles.statLabel}>Minutes focused</Text>
-        </View>
-      </View>
-
-      <View style={styles.tipsCard}>
-        <Ionicons name="bulb" size={18} color={Colors.accent} />
-        <Text style={styles.tipsText}>
-          Work for 25 minutes, then take a 5-minute break. After 4 sessions, take a longer break.
-        </Text>
       </View>
     </View>
   );
@@ -314,3 +367,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+

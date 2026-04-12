@@ -1,4 +1,5 @@
 import express from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
@@ -15,26 +16,17 @@ declare module "http" {
 
 function setupCors(app: express.Application) {
   app.use((req, res, next) => {
-    const origins = new Set<string>();
-
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
-    }
-
-    if (process.env.REPLIT_DOMAINS) {
-      process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
-      });
-    }
-
     const origin = req.header("origin");
 
-    // Allow localhost origins for Expo web development (any port)
+    // Allow all origins in development, or specific ones in production
+    // For this project, we'll allow localhost and the app domain
     const isLocalhost =
       origin?.startsWith("http://localhost:") ||
       origin?.startsWith("http://127.0.0.1:");
+    
+    const isAppDomain = origin === "https://lifebloom.app";
 
-    if (origin && (origins.has(origin) || isLocalhost)) {
+    if (origin && (isLocalhost || isAppDomain)) {
       res.header("Access-Control-Allow-Origin", origin);
       res.header(
         "Access-Control-Allow-Methods",
@@ -172,6 +164,28 @@ function configureExpoAndLanding(app: express.Application) {
 
   log("Serving static Expo files with dynamic manifest routing");
 
+  // Proxy Metro bundler dev requests (entry.bundle, node_modules/ etc.) to localhost:8081
+  app.use(
+    "/node_modules",
+    createProxyMiddleware({
+      target: "http://localhost:8081",
+      changeOrigin: true,
+      logLevel: "silent" as const,
+    })
+  );
+  // Catch-all proxy for bundle requests with query params
+  app.use((req, res, next) => {
+    if (req.path.endsWith('.bundle') || req.path.includes('/node_modules/')) {
+      const proxy = createProxyMiddleware({
+        target: "http://localhost:8081",
+        changeOrigin: true,
+        logLevel: "silent" as const,
+      });
+      return proxy(req, res, next);
+    }
+    next();
+  });
+
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) {
       return next();
@@ -221,6 +235,12 @@ function setupErrorHandler(app: express.Application) {
       return next(err);
     }
 
+    // For JS bundle requests, return JS-compatible error instead of JSON
+    if (_req.path.includes("bundle") || _req.path.includes("node_modules")) {
+      res.setHeader("Content-Type", "text/javascript");
+      return res.status(status).send(`/* Error: ${message} */`);
+    }
+
     return res.status(status).json({ message });
   });
 }
@@ -237,14 +257,7 @@ function setupErrorHandler(app: express.Application) {
   setupErrorHandler(app);
 
   const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`express server serving on port ${port}`);
-    },
-  );
+  server.listen(port, "0.0.0.0", () => {
+    log(`express server serving on port ${port}`);
+  });
 })();

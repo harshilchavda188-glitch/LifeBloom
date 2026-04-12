@@ -1,459 +1,977 @@
 <!doctype html>
-<html>
-  <head>
-    <title>APP_NAME_PLACEHOLDER</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        margin: 0;
-        padding: 32px 20px;
-        text-align: center;
-        background: #fff;
-        color: #222;
-        line-height: 1.5;
-        min-height: 100vh;
-      }
-      .wrapper {
-        max-width: 480px;
-        margin: 0 auto;
-      }
-      h1 {
-        font-size: 26px;
-        font-weight: 600;
-        margin: 0;
-        color: #111;
-      }
-      .subtitle {
-        font-size: 15px;
-        color: #666;
-        margin-top: 8px;
-        margin-bottom: 32px;
-      }
-      .loading {
-        display: none;
-        margin: 60px 0;
-      }
-      .spinner {
-        border: 2px solid #ddd;
-        border-top-color: #333;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        animation: spin 0.8s linear infinite;
-        margin: 20px auto;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      .loading-text {
-        font-size: 16px;
-        color: #444;
-      }
-      .content {
-        display: block;
-      }
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeBloom – Your All-in-One Life Companion</title>
+  <meta name="description" content="LifeBloom helps you manage tasks, budget, meals, health, focus, home, and safety — all in one beautiful app." />
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  
+  <style>
+    /* ── Reset & tokens ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --primary:   #D4637A;
+      --primary-rgb: 212, 99, 122;
+      --primary-h: #c0506a;
+      --accent:    #F4A261;
+      --success:   #4CAF82;
+      --info:      #4F46E5;
+      --bg:        #FAF7F5;
+      --surface:   #FFFFFF;
+      --text:      #1A1A2E;
+      --text-2:    #4A4A6A;
+      --text-3:    #8888AA;
+      --border:    #EDE8E4;
+      --radius:    32px;
+      --radius-sm: 16px;
+      --shadow:    0 10px 30px rgba(212,99,122,.08);
+      --shadow-lg: 0 20px 60px rgba(212,99,122,.15);
+      --nav-h:     80px;
+      --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
 
-      .steps-container {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
+    /* ── Animated Mesh Gradient Background ── */
+    .mesh-bg {
+      position: fixed; inset: 0; z-index: -1;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(var(--primary-rgb), 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(244, 162, 97, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(76, 175, 130, 0.1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(79, 70, 229, 0.1) 0px, transparent 50%);
+      filter: blur(80px); opacity: 0.8;
+      animation: meshShift 20s ease infinite alternate;
+    }
 
-      .step {
-        padding: 24px;
-        border: 1px solid #ddd;
-        border-radius: 12px;
-        text-align: center;
-        background: #fafafa;
-      }
-      .step-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 12px;
-      }
-      .step-number {
-        width: 28px;
-        height: 28px;
-        border: 1px solid #999;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 14px;
-        flex-shrink: 0;
-        color: #555;
-      }
-      .step-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0;
-        color: #222;
-      }
-      .step-description {
-        font-size: 14px;
-        margin-bottom: 16px;
-        color: #666;
-      }
+    @keyframes meshShift {
+      0% { transform: scale(1) rotate(0deg); }
+      100% { transform: scale(1.2) rotate(5deg); }
+    }
 
-      .store-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .store-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 12px 20px;
-        font-size: 14px;
-        font-weight: 500;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        text-decoration: none;
-        color: #333;
-        background: #fff;
-        transition: all 0.15s;
-      }
-      .store-button:hover {
-        background: #f5f5f5;
-        border-color: #999;
-      }
-      .store-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 8px 0;
-        font-size: 13px;
-        font-weight: 400;
-        text-decoration: underline;
-        text-underline-offset: 2px;
-        color: #666;
-        background: none;
-        border: none;
-        transition: color 0.15s;
-      }
-      .store-link:hover {
-        color: #333;
-      }
-      .store-link .store-icon {
-        width: 14px;
-        height: 14px;
-      }
-      .store-icon {
-        width: 18px;
-        height: 18px;
-      }
+    /* ── Glassmorphism ── */
+    .glass {
+      background: rgba(255, 255, 255, 0.7) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    [data-theme="dark"] .glass {
+      background: rgba(27, 26, 35, 0.7) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
 
-      .qr-section {
-        background: #333;
-        color: #fff;
-        border-color: #333;
-      }
-      .qr-section .step-number {
-        border-color: rgba(255, 255, 255, 0.5);
-        color: #fff;
-      }
-      .qr-section .step-title {
-        color: #fff;
-      }
-      .qr-section .step-description {
-        color: rgba(255, 255, 255, 0.7);
-      }
-      .qr-code {
-        width: 180px;
-        height: 180px;
-        margin: 0 auto 16px;
-        background: #fff;
-        border-radius: 8px;
-        padding: 12px;
-      }
-      .qr-code canvas {
-        width: 100%;
-        height: 100%;
-      }
-      .open-button {
-        display: inline-block;
-        padding: 12px 24px;
-        font-size: 14px;
-        font-weight: 500;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 8px;
-        text-decoration: none;
-        color: #333;
-        background: #fff;
-        transition: opacity 0.15s;
-      }
-      .open-button:hover {
-        opacity: 0.9;
-      }
+    /* ── Section Dividers ── */
+    .divider-wavy {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 60px;
+      background: var(--bg); clip-path: polygon(0 100%, 100% 100%, 100% 0, 0 100%);
+      z-index: 1;
+    }
 
-      /* Desktop styles */
-      @media (min-width: 768px) {
-        body {
-          padding: 48px 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .wrapper {
-          max-width: 720px;
-        }
-        h1 {
-          font-size: 32px;
-          margin-bottom: 10px;
-        }
-        .subtitle {
-          font-size: 16px;
-          margin-bottom: 40px;
-        }
-        .steps-container {
-          flex-direction: row;
-          gap: 20px;
-          align-items: stretch;
-        }
-        .step {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          padding: 28px;
-        }
-        .step-description {
-          flex-grow: 1;
-        }
-        .store-buttons {
-          flex-direction: column;
-          gap: 10px;
-        }
-        .qr-code {
-          width: 200px;
-          height: 200px;
-        }
-      }
+    [data-theme="dark"] {
+      --bg:      #0F0E17;
+      --surface: #1B1A23;
+      --text:    #F9F9F9;
+      --text-2:  #A7A6B5;
+      --text-3:  #6D6C7C;
+      --border:  #2D2C39;
+      --shadow:  0 4px 24px rgba(0,0,0,.40);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,.55);
+    }
 
-      /* Large desktop */
-      @media (min-width: 1024px) {
-        .wrapper {
-          max-width: 800px;
-        }
-        h1 {
-          font-size: 36px;
-        }
-        .steps-container {
-          gap: 28px;
-        }
-        .step {
-          padding: 32px;
-        }
-      }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color 0.5s ease;
+    }
 
-      /* Dark mode */
-      @media (prefers-color-scheme: dark) {
-        body {
-          background: #0d0d0d;
-          color: #e0e0e0;
-        }
-        h1 {
-          color: #f5f5f5;
-        }
-        .subtitle {
-          color: #999;
-        }
-        .spinner {
-          border-color: #444;
-          border-top-color: #ccc;
-        }
-        .loading-text {
-          color: #aaa;
-        }
-        .step {
-          border-color: #333;
-          background: #1a1a1a;
-        }
-        .step-number {
-          border-color: #666;
-          color: #bbb;
-        }
-        .step-title {
-          color: #f0f0f0;
-        }
-        .step-description {
-          color: #888;
-        }
-        .store-button {
-          border-color: #444;
-          color: #e0e0e0;
-          background: #222;
-        }
-        .store-button:hover {
-          background: #2a2a2a;
-          border-color: #666;
-        }
-        .store-link {
-          color: #888;
-        }
-        .store-link:hover {
-          color: #ccc;
-        }
-        .qr-section {
-          background: #111;
-          border-color: #333;
-        }
-        .qr-section .step-number {
-          border-color: rgba(255, 255, 255, 0.4);
-        }
-        .qr-section .step-description {
-          color: rgba(255, 255, 255, 0.6);
-        }
-        .open-button {
-          background: #f0f0f0;
-          color: #111;
-        }
-        .open-button:hover {
-          background: #e0e0e0;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="wrapper">
-      <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <div class="loading-text">Opening in Expo Go...</div>
-      </div>
+    /* ── Layout ── */
+    .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 120px 0; position: relative; }
 
-      <div class="content" id="content">
-        <h1>APP_NAME_PLACEHOLDER</h1>
-        <p class="subtitle">Preview this app on your phone</p>
+    /* ── Progress Bar ── */
+    #progress-bar {
+      position: fixed; top: 0; left: 0; width: 0%; height: 4px;
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      z-index: 1001; transition: width 0.1s ease-out;
+    }
 
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-header">
-              <div class="step-number">1</div>
-              <h2 class="step-title">Download Expo Go</h2>
-            </div>
-            <p class="step-description">
-              Expo Go is a free app to test mobile apps
-            </p>
-            <div class="store-buttons" id="store-buttons">
-              <a
-                id="app-store-btn"
-                href="https://apps.apple.com/app/id982107779"
-                class="store-button"
-                target="_blank"
-              >
-                <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"
-                  />
-                </svg>
-                App Store
-              </a>
-              <a
-                id="play-store-btn"
-                href="https://play.google.com/store/apps/details?id=host.exp.exponent"
-                class="store-button"
-                target="_blank"
-              >
-                <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"
-                  />
-                </svg>
-                Google Play
-              </a>
-            </div>
-          </div>
+    /* ── Cursor Trail ── */
+    #cursor-trail {
+      position: fixed; width: 20px; height: 20px; border: 2px solid var(--primary);
+      border-radius: 50%; pointer-events: none; z-index: 9999;
+      transition: transform 0.1s ease-out, opacity 0.3s ease;
+      opacity: 0; transform: translate(-50%, -50%);
+    }
 
-          <div class="step qr-section">
-            <div class="step-header">
-              <div class="step-number">2</div>
-              <h2 class="step-title">Scan QR Code</h2>
-            </div>
-            <p class="step-description">Use your phone's camera or Expo Go</p>
-            <div class="qr-code" id="qr-code"></div>
-            <a href="exps://EXPS_URL_PLACEHOLDER" class="open-button"
-              >Open in Expo Go</a
-            >
-          </div>
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      height: var(--nav-h); display: flex; align-items: center;
+      transition: var(--transition);
+    }
+    .nav.scrolled {
+      background: rgba(var(--primary-rgb), 0.05);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      height: 70px;
+    }
+    .nav__inner { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    
+    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; position: relative; }
+    .logo svg { width: 40px; height: 40px; }
+    .logo-text { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+
+    .nav__links { display: flex; gap: 32px; align-items: center; }
+    .nav__link {
+      text-decoration: none; color: var(--text-2); font-weight: 600; font-size: 15px;
+      transition: var(--transition); position: relative;
+    }
+    .nav__link:hover { color: var(--primary); }
+    .nav__link::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+      background: var(--primary); transition: var(--transition);
+    }
+    .nav__link:hover::after { width: 100%; }
+
+    .nav__cta {
+      padding: 12px 28px; border-radius: 99px; background: var(--primary);
+      color: #fff; text-decoration: none; font-weight: 700; font-size: 14px;
+      box-shadow: 0 10px 20px rgba(var(--primary-rgb), 0.3);
+      transition: var(--transition);
+    }
+    .nav__cta:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(var(--primary-rgb), 0.4); }
+
+    .theme-toggle {
+      background: var(--surface); border: 1px solid var(--border); width: 44px; height: 44px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text); font-size: 18px; transition: var(--transition);
+    }
+    .theme-toggle:hover { background: var(--border); transform: rotate(15deg); }
+
+    /* Mobile Menu */
+    .menu-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
+    .menu-toggle span { width: 28px; height: 3px; background: var(--text); border-radius: 3px; transition: var(--transition); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; overflow: hidden; padding-top: 100px;
+    }
+    #hero-particles { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+    .hero__content { position: relative; z-index: 1; max-width: 800px; }
+    .hero__badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+      background: rgba(var(--primary-rgb), 0.1); border-radius: 99px;
+      color: var(--primary); font-weight: 700; font-size: 14px; margin-bottom: 32px;
+      border: 1px solid rgba(var(--primary-rgb), 0.2);
+    }
+    .hero__title {
+      font-size: clamp(48px, 10vw, 96px); font-weight: 900; line-height: 1;
+      letter-spacing: -0.05em; margin-bottom: 24px; color: var(--text);
+    }
+    .hero__title span { color: var(--primary); }
+    .hero__tagline {
+      font-size: clamp(18px, 4vw, 24px); color: var(--text-2); margin-bottom: 48px;
+      font-weight: 500; min-height: 1.6em;
+    }
+    .hero__actions { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    
+    /* ── About Section ── */
+    .about { background: var(--surface); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .about__image {
+      position: relative; border-radius: var(--radius); overflow: hidden;
+      box-shadow: var(--shadow-lg); transform: perspective(1000px) rotateY(-10deg);
+    }
+    .about__image img { width: 100%; display: block; border-radius: var(--radius); }
+    .section-label { color: var(--primary); font-weight: 800; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; display: block; }
+    .section-title { font-size: clamp(32px, 5vw, 48px); font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
+    .section-desc { font-size: 18px; color: var(--text-2); margin-bottom: 32px; }
+
+    /* ── Features (Services) ── */
+    .features { background: var(--bg); }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .feature-card {
+      background: var(--surface); padding: 48px 32px; border-radius: var(--radius);
+      border: 1px solid var(--border); transition: var(--transition);
+      cursor: pointer; position: relative; overflow: hidden;
+    }
+    .feature-card:hover { transform: translateY(-12px); border-color: var(--primary); box-shadow: var(--shadow-lg); }
+    .feature-icon { font-size: 48px; margin-bottom: 24px; display: block; }
+    .feature-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    .feature-card p { color: var(--text-2); font-size: 15px; }
+    .feature-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px;
+      background: var(--primary); transform: scaleX(0); transition: var(--transition); transform-origin: left;
+    }
+    .feature-card:hover::after { transform: scaleX(1); }
+
+    /* ── Testimonials Carousel ── */
+    .testimonials { background: var(--surface); overflow: hidden; }
+    .swiper-container { padding: 40px 0 80px; }
+    .testimonial-card {
+      background: var(--bg); padding: 40px; border-radius: var(--radius);
+      text-align: center; border: 1px solid var(--border);
+    }
+    .testimonial-stars { color: var(--accent); font-size: 14px; margin-bottom: 16px; letter-spacing: 2px; }
+    .testimonial-text { font-size: 18px; font-style: italic; color: var(--text); margin-bottom: 24px; }
+    .testimonial-user { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .testimonial-avatar { width: 60px; height: 60px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; }
+    .testimonial-name { font-weight: 700; color: var(--text); }
+    .testimonial-role { font-size: 13px; color: var(--text-3); }
+
+    /* ── Contact Section ── */
+    .contact { background: var(--bg); }
+    .contact-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+    .contact-form {
+      background: var(--surface); padding: 48px; border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+    }
+    .form-group { margin-bottom: 24px; position: relative; }
+    .form-group label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 14px; }
+    .form-control {
+      width: 100%; padding: 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+      background: var(--bg); color: var(--text); font-family: inherit; font-size: 15px; transition: var(--transition);
+    }
+    .form-control:focus { outline: none; border-color: var(--primary); background: var(--surface); }
+    .submit-btn {
+      width: 100%; padding: 18px; border-radius: var(--radius-sm); background: var(--primary);
+      color: #fff; font-weight: 800; border: none; cursor: pointer; transition: var(--transition);
+    }
+    .submit-btn:hover { background: var(--primary-h); transform: translateY(-2px); }
+
+    /* ── Pricing Section ── */
+    .pricing { background: var(--surface); position: relative; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; margin-top: 48px; }
+    .price-card {
+      background: var(--bg); padding: 48px 32px; border-radius: var(--radius);
+      border: 1px solid var(--border); transition: var(--transition);
+      display: flex; flex-direction: column; align-items: center; position: relative;
+    }
+    .price-card--featured {
+      border-color: var(--primary); transform: scale(1.05); z-index: 2;
+      background: var(--surface); box-shadow: var(--shadow-lg);
+    }
+    .price-card__badge {
+      position: absolute; top: -14px; background: var(--primary); color: #fff;
+      padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 800;
+      text-transform: uppercase;
+    }
+    .price-card__title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .price-card__price { font-size: 48px; font-weight: 900; margin-bottom: 24px; color: var(--text); }
+    .price-card__price span { font-size: 16px; font-weight: 600; color: var(--text-3); }
+    .price-card__features { list-style: none; margin-bottom: 32px; width: 100%; }
+    .price-card__feature { 
+      display: flex; align-items: center; gap: 10px; font-size: 14px; 
+      color: var(--text-2); margin-bottom: 12px; 
+    }
+    .price-card__feature svg { width: 16px; height: 16px; color: var(--success); }
+
+    /* ── Footer ── */
+    footer { padding: 80px 0 40px; background: var(--surface); border-top: 1px solid var(--border); }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 60px; margin-bottom: 60px; }
+    .footer__title { font-size: 18px; font-weight: 800; margin-bottom: 24px; }
+    .footer__links { list-style: none; }
+    .footer__link { margin-bottom: 12px; }
+    .footer__link a { text-decoration: none; color: var(--text-2); transition: var(--transition); font-size: 15px; }
+    .footer__link a:hover { color: var(--primary); padding-left: 8px; }
+    
+    .social-links { display: flex; gap: 16px; margin-top: 24px; }
+    .social-icon {
+      width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; color: var(--text);
+      text-decoration: none; transition: var(--transition);
+    }
+    .social-icon:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: translateY(-5px) rotate(10deg); }
+
+    /* ── Floating Back to Top ── */
+    #back-to-top {
+      position: fixed; bottom: 40px; right: 40px; width: 56px; height: 56px;
+      background: var(--primary); color: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      z-index: 999; opacity: 0; transform: translateY(20px); transition: var(--transition);
+      box-shadow: 0 10px 20px rgba(var(--primary-rgb), 0.3);
+    }
+    #back-to-top.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Mobile Menu ── */
+    .nav__links-mobile {
+      position: fixed; inset: 0; background: var(--surface);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; z-index: 2000; transform: translateY(-100%); transition: var(--transition);
+    }
+    .nav__links-mobile.active { transform: translateY(0); }
+    .close-menu { position: absolute; top: 30px; right: 30px; font-size: 32px; cursor: pointer; }
+
+    /* Success Animation */
+    .success-overlay {
+      position: absolute; inset: 0; background: var(--surface);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.5s ease; border-radius: var(--radius);
+    }
+    .success-overlay.active { opacity: 1; pointer-events: auto; }
+    .checkmark { width: 80px; height: 80px; border-radius: 50%; background: var(--success); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 20px; }
+  </style>
+</head>
+<body data-theme="light">
+  
+  <div class="mesh-bg"></div>
+  <div id="progress-bar"></div>
+  <div id="cursor-trail"></div>
+
+  <div class="nav__links-mobile" id="mobile-menu">
+    <div class="close-menu" id="close-menu">✕</div>
+    <a href="#home" class="nav__link">Home</a>
+    <a href="#about" class="nav__link">Vision</a>
+    <a href="#features" class="nav__link">Features</a>
+    <a href="#pricing" class="nav__link">Pricing</a>
+    <a href="#testimonials" class="nav__link">Reviews</a>
+    <a href="#contact" class="nav__link">Contact</a>
+    <a href="#download" class="nav__cta">Download Now</a>
+  </div>
+
+  <nav class="nav" id="main-nav">
+    <div class="container">
+      <div class="nav__inner">
+        <a href="#" class="logo">
+          <svg viewBox="0 0 100 100" id="svg-logo">
+            <path d="M50 15 L85 85 L15 85 Z" fill="none" stroke="var(--primary)" stroke-width="8" id="logo-path" />
+            <circle cx="50" cy="50" r="10" fill="var(--accent)" id="logo-dot" />
+          </svg>
+          <span class="logo-text">LifeBloom</span>
+        </a>
+        
+        <div class="nav__links">
+          <a href="#home" class="nav__link">Home</a>
+          <a href="#about" class="nav__link">Vision</a>
+          <a href="#features" class="nav__link">Features</a>
+          <a href="#pricing" class="nav__link">Pricing</a>
+          <a href="#testimonials" class="nav__link">Reviews</a>
+          <a href="#contact" class="nav__link">Contact</a>
+          <button class="theme-toggle" id="theme-btn">🌙</button>
+          <a href="#download" class="nav__cta">Download Now</a>
+        </div>
+
+        <div class="menu-toggle" id="menu-btn">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
       </div>
     </div>
+  </nav>
 
-    <script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
-    <script>
-      (function () {
-        const ua = navigator.userAgent;
-        const loadingEl = document.getElementById("loading");
-        const contentEl = document.getElementById("content");
+  <main>
+    <!-- Home Section -->
+    <section id="home" class="hero">
+      <canvas id="hero-particles"></canvas>
+      <div class="container hero__content">
+        <span class="hero__badge">✨ Empowering Your Daily Growth</span>
+        <h1 class="hero__title">Experience <span>Life</span></h1>
+        <p class="hero__tagline" id="typewriter"></p>
+        <div class="hero__actions">
+          <a href="#download" class="btn btn--primary">Get Started for Free</a>
+          <a href="#about" class="btn btn--outline">Discover the Vision</a>
+        </div>
+      </div>
+      <div class="divider-wavy"></div>
+    </section>
 
-        const isAndroid = /Android/i.test(ua);
-        const isIOS =
-          /iPhone|iPad|iPod/i.test(ua) ||
-          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    <!-- About Section -->
+    <section id="about" class="about">
+      <div class="container">
+        <div class="about-grid">
+          <div class="about__image" id="parallax-img">
+            <img src="https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?auto=format&fit=crop&q=80&w=800" alt="Modern Lifestyle" />
+          </div>
+          <div class="about__text">
+            <span class="section-label">Our Vision</span>
+            <h2 class="section-title">Reimagine Your Daily Workflow.</h2>
+            <p class="section-desc">LifeBloom isn't just an app; it's your personal architect for a balanced life. We combine advanced productivity tools with wellness tracking to ensure you thrive, not just survive.</p>
+            <p class="section-desc">Built for high-performance individuals who value their time and mental well-being equally.</p>
+            <a href="#features" class="btn btn--outline">Explore Core Modules</a>
+          </div>
+        </div>
+      </div>
+      <div class="divider-wavy"></div>
+    </section>
 
-        const deepLink = "exps://EXPS_URL_PLACEHOLDER";
+    <!-- Features Section -->
+    <section id="features" class="features">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-label">Features</span>
+          <h2 class="section-title">The Power of Unity.</h2>
+          <p class="section-sub">Stop app-switching. Everything you need to manage your life is integrated into one high-performance dashboard.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card reveal glass">
+            <span class="feature-icon">⚡</span>
+            <h3>Dynamic Tasks</h3>
+            <p>Priority matrix, recurring events, and smart notifications to keep you on track.</p>
+          </div>
+          <div class="feature-card reveal glass">
+            <span class="feature-icon">💎</span>
+            <h3>Wealth Engine</h3>
+            <p>Track expenses in any currency, set goals, and visualize your financial health.</p>
+          </div>
+          <div class="feature-card reveal glass">
+            <span class="feature-icon">🌿</span>
+            <h3>Vitality Tracker</h3>
+            <p>Hydration reminders, mood logging, and wellness insights for a healthier you.</p>
+          </div>
+          <div class="feature-card reveal glass">
+            <span class="feature-icon">🍽️</span>
+            <h3>Meal Mastery</h3>
+            <p>AI-assisted meal planning and intelligent grocery lists that sync with your schedule.</p>
+          </div>
+          <div class="feature-card reveal glass">
+            <span class="feature-icon">🎯</span>
+            <h3>Focus Flow</h3>
+            <p>Advanced Pomodoro timer with ambient sounds and deep work statistics.</p>
+          </div>
+          <div class="feature-card reveal glass">
+            <span class="feature-icon">🛡️</span>
+            <h3>Safety SOS</h3>
+            <p>One-tap emergency alerts and secure household management tools.</p>
+          </div>
+        </div>
+      </div>
+      <div class="divider-wavy"></div>
+    </section>
 
-        // Adjust store buttons based on platform
-        const appStoreBtn = document.getElementById("app-store-btn");
-        const playStoreBtn = document.getElementById("play-store-btn");
-        const storeButtonsContainer = document.getElementById("store-buttons");
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-label">Community</span>
+          <h2 class="section-title">Trusted by Global High-Performers.</h2>
+          <p class="section-sub">Join over 10,000 users who have redesigned their lives with LifeBloom's scientific approach to productivity.</p>
+        </div>
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <div class="testimonial-card">
+                <div class="testimonial-stars">★★★★★</div>
+                <p class="testimonial-text">"LifeBloom isn't just an app; it's a mental model for high performance. It has completely replaced my fragmented workflow with a unified, beautiful experience."</p>
+                <div class="testimonial-user">
+                  <div class="testimonial-avatar" style="background: var(--info);">JD</div>
+                  <span class="testimonial-name">James Dalton</span>
+                  <span class="testimonial-role">CTO at TechStream</span>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="testimonial-card">
+                <div class="testimonial-stars">★★★★★</div>
+                <p class="testimonial-text">"The focus timer combined with real-time health insights is genius. I've seen a 40% increase in my deep work sessions since I started using it."</p>
+                <div class="testimonial-user">
+                  <div class="testimonial-avatar" style="background: var(--primary);">SK</div>
+                  <span class="testimonial-name">Sarah Kapoor</span>
+                  <span class="testimonial-role">Principal Designer</span>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-slide">
+              <div class="testimonial-card">
+                <div class="testimonial-stars">★★★★★</div>
+                <p class="testimonial-text">"The budget tracking module is surprisingly powerful yet so intuitive. It's the first time I actually enjoy managing my personal finances."</p>
+                <div class="testimonial-user">
+                  <div class="testimonial-avatar" style="background: var(--accent);">MA</div>
+                  <span class="testimonial-name">Michael Aris</span>
+                  <span class="testimonial-role">Serial Entrepreneur</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+      </div>
+      <div class="divider-wavy"></div>
+    </section>
 
-        if (isIOS) {
-          playStoreBtn.className = "store-link";
-          storeButtonsContainer.appendChild(playStoreBtn);
-        } else if (isAndroid) {
-          appStoreBtn.className = "store-link";
-          storeButtonsContainer.insertBefore(playStoreBtn, appStoreBtn);
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-label">Plans</span>
+          <h2 class="section-title">Transparent Pricing.</h2>
+          <p class="section-sub">Choose the perfect plan for your journey. No hidden fees, just pure growth.</p>
+        </div>
+        <div class="pricing-grid">
+          <div class="price-card reveal">
+            <h3 class="price-card__title">Basic</h3>
+            <div class="price-card__price">$0<span>/mo</span></div>
+            <ul class="price-card__features">
+              <li class="price-card__feature">✅ Task Management</li>
+              <li class="price-card__feature">✅ Water Tracking</li>
+              <li class="price-card__feature">✅ Basic Analytics</li>
+              <li class="price-card__feature">❌ Advanced Budgeting</li>
+            </ul>
+            <a href="#download" class="btn btn--outline" style="width: 100%;">Get Started</a>
+          </div>
+          <div class="price-card price-card--featured reveal">
+            <div class="price-card__badge">Most Popular</div>
+            <h3 class="price-card__title">Premium</h3>
+            <div class="price-card__price">$9<span>/mo</span></div>
+            <ul class="price-card__features">
+              <li class="price-card__feature">✅ Everything in Basic</li>
+              <li class="price-card__feature">✅ Full Budget Engine</li>
+              <li class="price-card__feature">✅ Meal Planner Pro</li>
+              <li class="price-card__feature">✅ Deep Focus Stats</li>
+            </ul>
+            <a href="#download" class="btn btn--primary" style="width: 100%;">Unlock Pro</a>
+          </div>
+          <div class="price-card reveal">
+            <h3 class="price-card__title">Lifetime</h3>
+            <div class="price-card__price">$99<span>/once</span></div>
+            <ul class="price-card__features">
+              <li class="price-card__feature">✅ Lifetime Updates</li>
+              <li class="price-card__feature">✅ Priority Support</li>
+              <li class="price-card__feature">✅ All Future Modules</li>
+              <li class="price-card__feature">✅ Beta Access</li>
+            </ul>
+            <a href="#download" class="btn btn--outline" style="width: 100%;">One-time Purchase</a>
+          </div>
+        </div>
+      </div>
+      <div class="divider-wavy"></div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <div class="contact-wrap">
+          <div class="contact-info">
+            <span class="section-label">Get in Touch</span>
+            <h2 class="section-title">Let's Build the Future of Living.</h2>
+            <p class="section-desc">Have questions or want to collaborate? Our team is always here to help you bloom.</p>
+            <div class="social-links">
+              <a href="#" class="social-icon">𝕏</a>
+              <a href="#" class="social-icon">📸</a>
+              <a href="#" class="social-icon">💼</a>
+              <a href="#" class="social-icon">🐙</a>
+            </div>
+          </div>
+          <div class="contact-form" id="form-container">
+            <form id="main-contact-form">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" class="form-control" placeholder="John Doe" required />
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" class="form-control" placeholder="john@example.com" required />
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea class="form-control" rows="5" placeholder="Tell us something..." required></textarea>
+              </div>
+              <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+            <div class="success-overlay" id="form-success">
+              <div class="checkmark">✓</div>
+              <h3>Message Sent!</h3>
+              <p>We'll get back to you shortly.</p>
+              <button class="btn btn--outline" style="margin-top: 20px;" onclick="resetForm()">Send Another</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="divider-wavy"></div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="about" style="background: var(--bg);">
+      <div class="container">
+        <div class="about-grid" style="align-items: center;">
+          <div class="about__text">
+            <h2 class="section-title">Ready to Transform Your Life?</h2>
+            <p class="section-desc">Download LifeBloom today and start your journey towards a more organized, healthy, and focused version of yourself.</p>
+            <div class="hero__actions" style="justify-content: flex-start;">
+              <a href="exps://EXPS_URL_PLACEHOLDER" class="btn btn--primary">Launch App Now</a>
+              <a href="#" class="btn btn--outline">Learn More</a>
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div style="background: #fff; padding: 24px; border-radius: 32px; display: inline-block; box-shadow: var(--shadow-lg);">
+              <div id="qr-code"></div>
+            </div>
+            <p style="margin-top: 16px; font-weight: 700; color: var(--text-3);">Scan to launch instantly</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer__about">
+          <a href="#" class="logo" style="margin-bottom: 24px;">
+            <svg viewBox="0 0 100 100">
+              <path d="M50 15 L85 85 L15 85 Z" fill="none" stroke="var(--primary)" stroke-width="8" />
+              <circle cx="50" cy="50" r="10" fill="var(--accent)" />
+            </svg>
+            <span class="logo-text">LifeBloom</span>
+          </a>
+          <p style="color: var(--text-2); font-size: 15px;">The only platform that truly understands the balance between productivity and vitality.</p>
+        </div>
+        <div>
+          <h4 class="footer__title">Product</h4>
+          <ul class="footer__links">
+            <li class="footer__link"><a href="#features">Features</a></li>
+            <li class="footer__link"><a href="#download">Download</a></li>
+            <li class="footer__link"><a href="#">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer__title">Company</h4>
+          <ul class="footer__links">
+            <li class="footer__link"><a href="#about">Our Vision</a></li>
+            <li class="footer__link"><a href="#contact">Contact</a></li>
+            <li class="footer__link"><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="footer__title">Newsletter</h4>
+          <p style="color: var(--text-2); font-size: 14px; margin-bottom: 16px;">Get monthly insights on high-performance living.</p>
+          <div class="form-group" style="display: flex; gap: 8px;">
+            <input type="email" class="form-control" placeholder="Email" style="padding: 12px;" />
+            <button class="btn btn--primary" style="padding: 12px 20px;">Join</button>
+          </div>
+        </div>
+      </div>
+      <div style="text-align: center; border-top: 1px solid var(--border); padding-top: 40px;">
+        <p class="footer-copy">&copy; 2026 LifeBloom. Crafted with ❤️ for a better life.</p>
+      </div>
+    </div>
+  </footer>
+
+  <div id="back-to-top">↑</div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+
+  <script>
+    // Register GSAP Plugins
+    gsap.registerPlugin(ScrollTrigger);
+
+    // ── Theme Toggle ──
+    const themeBtn = document.getElementById('theme-btn');
+    const body = document.body;
+    let isDark = false;
+
+    themeBtn.addEventListener('click', () => {
+      isDark = !isDark;
+      body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      themeBtn.textContent = isDark ? '☀️' : '🌙';
+      
+      // Animate background color change
+      gsap.to(body, { duration: 0.5, backgroundColor: getComputedStyle(body).getPropertyValue('--bg') });
+    });
+
+    // ── Cursor Trail ──
+    const cursor = document.getElementById('cursor-trail');
+    document.addEventListener('mousemove', (e) => {
+      gsap.to(cursor, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.1,
+        opacity: 1
+      });
+    });
+
+    // ── Progress Bar ──
+    window.addEventListener('scroll', () => {
+      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+      document.getElementById('progress-bar').style.width = scrollPercent + '%';
+      
+      const nav = document.getElementById('main-nav');
+      if (window.scrollY > 50) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+
+      const btt = document.getElementById('back-to-top');
+      if (window.scrollY > 500) btt.classList.add('visible');
+      else btt.classList.remove('visible');
+    });
+
+    document.getElementById('back-to-top').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ── Typewriter Effect ──
+    new Typed('#typewriter', {
+      strings: [
+        'Organize your <span>Tasks</span>.',
+        'Master your <span>Budget</span>.',
+        'Plan your <span>Meals</span>.',
+        'Track your <span>Vitality</span>.',
+        'Focus on what <span>Matters</span>.'
+      ],
+      typeSpeed: 50,
+      backSpeed: 30,
+      loop: true,
+      cursorChar: '_'
+    });
+
+    // ── Hero Particles ──
+    const canvas = document.getElementById('hero-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 3 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.opacity = Math.random() * 0.5;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+      }
+      draw() {
+        ctx.fillStyle = `rgba(212, 99, 122, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ── GSAP Animations ──
+    
+    // Logo Reveal
+    gsap.from('#logo-path', { duration: 1.5, strokeDasharray: 300, strokeDashoffset: 300, ease: 'power2.out' });
+    gsap.from('#logo-dot', { duration: 1, scale: 0, opacity: 0, delay: 1, ease: 'back.out' });
+
+    // Hero Animations
+    gsap.from('.hero__content > *', {
+      y: 50, opacity: 0, duration: 1, stagger: 0.2, ease: 'power3.out'
+    });
+
+    // 3D Tilt Effect for Feature Cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = (y - centerY) / 10;
+        const rotateY = (centerX - x) / 10;
+
+        gsap.to(card, {
+          rotateX: rotateX,
+          rotateY: rotateY,
+          scale: 1.05,
+          duration: 0.5,
+          ease: 'power2.out'
+        });
+      });
+
+      card.addEventListener('mouseleave', () => {
+        gsap.to(card, {
+          rotateX: 0,
+          rotateY: 0,
+          scale: 1,
+          duration: 0.5,
+          ease: 'power2.out'
+        });
+      });
+    });
+
+    // Scroll-triggered Background Color Transitions
+    const sections = ['#home', '#about', '#features', '#testimonials', '#contact'];
+    const colors = ['#FAF7F5', '#FFFFFF', '#FAF7F5', '#FFFFFF', '#FAF7F5'];
+
+    sections.forEach((id, i) => {
+      ScrollTrigger.create({
+        trigger: id,
+        start: 'top 50%',
+        onEnter: () => {
+          if (!isDark) gsap.to(body, { backgroundColor: colors[i], duration: 1 });
+        },
+        onEnterBack: () => {
+          if (!isDark) gsap.to(body, { backgroundColor: colors[i], duration: 1 });
         }
+      });
+    });
 
-        const qrCode = new QRCodeStyling({
-          width: 400,
-          height: 400,
-          data: deepLink,
-          dotsOptions: {
-            color: "#333333",
-            type: "rounded",
-          },
-          backgroundOptions: {
-            color: "#ffffff",
-          },
-          cornersSquareOptions: {
-            type: "extra-rounded",
-          },
-          cornersDotOptions: {
-            type: "dot",
-          },
-          qrOptions: {
-            errorCorrectionLevel: "H",
-          },
+    // About Parallax & Scroll Reveal
+    gsap.to('#parallax-img', {
+      scrollTrigger: {
+        trigger: '.about',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true
+      },
+      y: -50,
+      rotateY: 10
+    });
+
+    // Features Reveal
+    gsap.from('.feature-card', {
+      scrollTrigger: {
+        trigger: '.features-grid',
+        start: 'top 80%'
+      },
+      y: 60, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power2.out'
+    });
+
+    // ── Testimonials Swiper ──
+    new Swiper('.swiper-container', {
+      slidesPerView: 1,
+      spaceBetween: 30,
+      pagination: { el: '.swiper-pagination', clickable: true },
+      breakpoints: {
+        768: { slidesPerView: 2 },
+        1024: { slidesPerView: 3 }
+      },
+      autoplay: { delay: 5000 }
+    });
+
+    // ── Contact Form Logic ──
+    const contactForm = document.getElementById('main-contact-form');
+    const formSuccess = document.getElementById('form-success');
+
+    contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        name: contactForm.querySelector('input[type="text"]').value,
+        email: contactForm.querySelector('input[type="email"]').value,
+        message: contactForm.querySelector('textarea').value
+      };
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
         });
 
-        qrCode.append(document.getElementById("qr-code"));
-
-        if (isAndroid || isIOS) {
-          loadingEl.style.display = "block";
-          contentEl.style.display = "none";
-          window.location.href = deepLink;
-          setTimeout(function () {
-            loadingEl.style.display = "none";
-            contentEl.style.display = "block";
-          }, 500);
+        if (response.ok) {
+          gsap.to(contactForm, { duration: 0.3, opacity: 0, y: -20 });
+          setTimeout(() => {
+            formSuccess.classList.add('active');
+            gsap.from(formSuccess, { duration: 0.5, scale: 0.8, opacity: 0 });
+          }, 300);
+        } else {
+          alert('Something went wrong. Please try again.');
         }
-      })();
-    </script>
-  </body>
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('Network error. Please check your connection.');
+      }
+    });
+
+    // ── Newsletter Logic ──
+    const newsletterForm = document.querySelector('.footer__about + div + div + div'); // Target the newsletter section
+    const newsletterBtn = newsletterForm.querySelector('.btn--primary');
+    const newsletterInput = newsletterForm.querySelector('input[type="email"]');
+
+    newsletterBtn.addEventListener('click', async () => {
+      const email = newsletterInput.value;
+      if (!email) return alert('Please enter an email');
+
+      try {
+        const response = await fetch('/api/newsletter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        if (response.ok) {
+          newsletterInput.value = '';
+          newsletterBtn.textContent = 'Joined! ✨';
+          newsletterBtn.disabled = true;
+          newsletterBtn.style.background = 'var(--success)';
+        } else {
+          alert('Failed to join. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error joining newsletter:', error);
+      }
+    });
+
+    window.resetForm = () => {
+      formSuccess.classList.remove('active');
+      contactForm.reset();
+      gsap.to(contactForm, { duration: 0.3, opacity: 1, y: 0 });
+    };
+
+    // ── QR Code ──
+    const qrCode = new QRCodeStyling({
+      width: 180,
+      height: 180,
+      data: "exps://EXPS_URL_PLACEHOLDER",
+      dotsOptions: { color: "#D4637A", type: "rounded" },
+      backgroundOptions: { color: "#ffffff" },
+      cornersSquareOptions: { type: "extra-rounded", color: "#1A1A2E" },
+      qrOptions: { errorCorrectionLevel: "H" },
+    });
+    qrCode.append(document.getElementById('qr-code'));
+
+    // ── Mobile Menu Toggle ──
+    const menuBtn = document.getElementById('menu-btn');
+    const closeBtn = document.getElementById('close-menu');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.add('active');
+    });
+    closeBtn.addEventListener('click', () => {
+      mobileMenu.classList.remove('active');
+    });
+    mobileMenu.querySelectorAll('.nav__link, .nav__cta').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('active');
+      });
+    });
+  </script>
+</body>
 </html>

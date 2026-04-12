@@ -7,12 +7,20 @@ import {
   FlatList,
   Platform,
   ScrollView,
+  useWindowDimensions,
+  Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { 
+  getContentWidth, 
+  getHorizontalPadding, 
+  getWebTopPadding,
+  isDesktop,
+} from '@/lib/responsive';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -24,7 +32,7 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { getMeals, deleteMeal, getGroceryList, saveGroceryList, Meal, GroceryItem, getWeekDates, getDayName } from '@/lib/storage';
+import { getMeals, deleteMeal, getGroceryList, saveGroceryList, Meal, GroceryItem, getWeekDates, getDayName, saveMeals } from '@/lib/storage';
 import * as Crypto from 'expo-crypto';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
@@ -37,10 +45,17 @@ const MEAL_ICONS: Record<string, string> = {
 
 export default function MealsScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [groceryList, setGroceryList] = useState<GroceryItem[]>([]);
   const [activeTab, setActiveTab] = useState<'planner' | 'grocery'>('planner');
   const weekDates = getWeekDates();
+
+  // Enhanced responsive calculations
+  const contentWidth = getContentWidth();
+  const horizontalPadding = getHorizontalPadding();
+  const webTopPad = getWebTopPadding();
+  const isLargeScreen = isDesktop;
 
   useFocusEffect(
     useCallback(() => {
@@ -57,7 +72,31 @@ export default function MealsScreen() {
   async function removeMeal(id: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await deleteMeal(id);
-    loadData();
+    loadMeals();
+  }
+
+  async function clearPastMeals() {
+    const today = new Date().toISOString().split('T')[0];
+    const pastMeals = meals.filter(m => m.day < today);
+    if (pastMeals.length === 0) return;
+
+    Alert.alert(
+      'Clear Past Meals',
+      `Remove all ${pastMeals.length} meals from previous days?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            const currentAndFuture = meals.filter(m => m.day >= today);
+            await saveMeals(currentAndFuture);
+            setMeals(currentAndFuture);
+          }
+        }
+      ]
+    );
   }
 
   async function generateGrocery() {
@@ -84,128 +123,167 @@ export default function MealsScreen() {
     await saveGroceryList(updated);
   }
 
-  const webTopPad = Platform.OS === 'web' ? 67 : 0;
+  async function clearCheckedGrocery() {
+    const checked = groceryList.filter(g => g.checked);
+    if (checked.length === 0) return;
+
+    Alert.alert(
+      'Clear Checked Items',
+      `Are you sure you want to remove all ${checked.length} checked items from your grocery list?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Clear', 
+          style: 'destructive',
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            const remaining = groceryList.filter(g => !g.checked);
+            await saveGroceryList(remaining);
+            setGroceryList(remaining);
+          }
+        }
+      ]
+    );
+  }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + webTopPad }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Meals</Text>
-        <View style={styles.headerActions}>
-          {meals.length > 0 && (
+    <View style={[styles.container, { paddingTop: insets.top + webTopPad, paddingHorizontal: horizontalPadding }]}>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Meals</Text>
+          <View style={styles.headerActions}>
+            {activeTab === 'planner' && meals.some(m => m.day < new Date().toISOString().split('T')[0]) && (
+              <Pressable
+                onPress={clearPastMeals}
+                style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name="calendar-clear-outline" size={24} color={Colors.primary} />
+              </Pressable>
+            )}
+            {meals.length > 0 && (
+              <Pressable
+                onPress={generateGrocery}
+                style={({ pressed }) => [styles.groceryBtn, pressed && { opacity: 0.8 }]}
+              >
+                <Ionicons name="cart" size={18} color={Colors.primary} />
+              </Pressable>
+            )}
             <Pressable
-              onPress={generateGrocery}
-              style={({ pressed }) => [styles.groceryBtn, pressed && { opacity: 0.8 }]}
+              onPress={() => router.push('/add-meal')}
+              style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
             >
-              <Ionicons name="cart" size={18} color={Colors.primary} />
+              <Ionicons name="add" size={24} color="#fff" />
             </Pressable>
-          )}
-          <Pressable
-            onPress={() => router.push('/add-meal')}
-            style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-          </Pressable>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.tabRow}>
-        <Pressable
-          onPress={() => setActiveTab('planner')}
-          style={[styles.tab, activeTab === 'planner' && styles.tabActive]}
-        >
-          <Text style={[styles.tabText, activeTab === 'planner' && styles.tabTextActive]}>Meal Plan</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setActiveTab('grocery')}
-          style={[styles.tab, activeTab === 'grocery' && styles.tabActive]}
-        >
-          <Text style={[styles.tabText, activeTab === 'grocery' && styles.tabTextActive]}>Grocery List</Text>
-          {groceryList.length > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{groceryList.filter(g => !g.checked).length}</Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
-
-      {activeTab === 'planner' ? (
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 120 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {meals.length === 0 ? (
-            <View style={styles.empty}>
-              <Ionicons name="restaurant-outline" size={48} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>No meals planned</Text>
-              <Text style={styles.emptySubtitle}>Plan your weekly meals</Text>
-            </View>
-          ) : (
-            weekDates.map(date => {
-              const dayMeals = meals.filter(m => m.day === date);
-              if (dayMeals.length === 0) return null;
-              return (
-                <View key={date} style={styles.daySection}>
-                  <Text style={styles.dayTitle}>
-                    {getDayName(date)} {new Date(date).getDate()}
-                  </Text>
-                  {dayMeals.map(meal => (
-                    <Pressable
-                      key={meal.id}
-                      onLongPress={() => removeMeal(meal.id)}
-                      style={({ pressed }) => [styles.mealCard, pressed && { opacity: 0.9 }]}
-                    >
-                      <View style={[styles.mealIcon, { backgroundColor: Colors.accent + '18' }]}>
-                        <Ionicons name={MEAL_ICONS[meal.mealType] as any || 'restaurant'} size={18} color={Colors.accent} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.mealType}>{meal.mealType}</Text>
-                        <Text style={styles.mealName}>{meal.name}</Text>
-                      </View>
-                      {meal.ingredients.length > 0 && (
-                        <Text style={styles.ingredientCount}>{meal.ingredients.length} items</Text>
-                      )}
-                    </Pressable>
-                  ))}
-                </View>
-              );
-            })
-          )}
-        </ScrollView>
-      ) : (
-        <FlatList
-          data={groceryList}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
-          scrollEnabled={!!groceryList.length}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Ionicons name="cart-outline" size={48} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>Grocery list empty</Text>
-              <Text style={styles.emptySubtitle}>
-                {meals.length > 0
-                  ? 'Generate from your meal plan'
-                  : 'Add meals first to generate a list'}
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => (
+        <View style={styles.tabRow}>
+          <Pressable
+            onPress={() => setActiveTab('planner')}
+            style={[styles.tab, activeTab === 'planner' && styles.tabActive]}
+          >
+            <Text style={[styles.tabText, activeTab === 'planner' && styles.tabTextActive]}>Meal Plan</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setActiveTab('grocery')}
+            style={[styles.tab, activeTab === 'grocery' && styles.tabActive]}
+          >
+            <Text style={[styles.tabText, activeTab === 'grocery' && styles.tabTextActive]}>Grocery List</Text>
+            {groceryList.length > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{groceryList.filter(g => !g.checked).length}</Text>
+              </View>
+            )}
+          </Pressable>
+          {activeTab === 'grocery' && groceryList.some(g => g.checked) && (
             <Pressable
-              onPress={() => toggleGroceryItem(item.id)}
-              style={({ pressed }) => [styles.groceryItem, pressed && { opacity: 0.9 }]}
+              onPress={clearCheckedGrocery}
+              style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.7 }]}
             >
-              <Ionicons
-                name={item.checked ? "checkmark-circle" : "ellipse-outline"}
-                size={22}
-                color={item.checked ? Colors.success : Colors.textMuted}
-              />
-              <Text style={[styles.groceryText, item.checked && styles.groceryChecked]}>
-                {item.name}
-              </Text>
+              <Ionicons name="trash-outline" size={20} color={Colors.primary} />
             </Pressable>
           )}
-        />
-      )}
+        </View>
+
+        {activeTab === 'planner' ? (
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 120 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {meals.length === 0 ? (
+              <View style={styles.empty}>
+                <Ionicons name="restaurant-outline" size={48} color={Colors.textMuted} />
+                <Text style={styles.emptyTitle}>No meals planned</Text>
+                <Text style={styles.emptySubtitle}>Plan your weekly meals</Text>
+              </View>
+            ) : (
+              weekDates.map(date => {
+                const dayMeals = meals.filter(m => m.day === date);
+                if (dayMeals.length === 0) return null;
+                return (
+                  <View key={date} style={styles.daySection}>
+                    <Text style={styles.dayTitle}>
+                      {getDayName(date)} {new Date(date).getDate()}
+                    </Text>
+                    {dayMeals.map(meal => (
+                      <Pressable
+                        key={meal.id}
+                        onLongPress={() => removeMeal(meal.id)}
+                        style={({ pressed }) => [styles.mealCard, pressed && { opacity: 0.9 }]}
+                      >
+                        <View style={[styles.mealIcon, { backgroundColor: Colors.accent + '18' }]}>
+                          <Ionicons name={MEAL_ICONS[meal.mealType] as any || 'restaurant'} size={18} color={Colors.accent} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.mealType}>{meal.mealType}</Text>
+                          <Text style={styles.mealName}>{meal.name}</Text>
+                        </View>
+                        {meal.ingredients.length > 0 && (
+                          <Text style={styles.ingredientCount}>{meal.ingredients.length} items</Text>
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={groceryList}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+            scrollEnabled={!!groceryList.length}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <Ionicons name="cart-outline" size={48} color={Colors.textMuted} />
+                <Text style={styles.emptyTitle}>Grocery list empty</Text>
+                <Text style={styles.emptySubtitle}>
+                  {meals.length > 0
+                    ? 'Generate from your meal plan'
+                    : 'Add meals first to generate a list'}
+                </Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => toggleGroceryItem(item.id)}
+                style={({ pressed }) => [styles.groceryItem, pressed && { opacity: 0.9 }]}
+              >
+                <Ionicons
+                  name={item.checked ? "checkmark-circle" : "ellipse-outline"}
+                  size={22}
+                  color={item.checked ? Colors.success : Colors.textMuted}
+                />
+                <Text style={[styles.groceryText, item.checked && styles.groceryChecked]}>
+                  {item.name}
+                </Text>
+              </Pressable>
+            )}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -275,6 +353,10 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: Colors.primary,
+  },
+  clearBtn: {
+    paddingHorizontal: 12,
+    justifyContent: 'center',
   },
   badge: {
     backgroundColor: Colors.primary,

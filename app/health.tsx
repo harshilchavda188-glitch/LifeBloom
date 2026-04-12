@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,11 +35,16 @@ const MOODS = [
 
 export default function HealthScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const today = getToday();
   const [waterGlasses, setWaterGlasses] = useState(0);
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [todayMood, setTodayMood] = useState<number | null>(null);
   const webTopPad = Platform.OS === 'web' ? 67 : 0;
+
+  const isLargeScreen = width > 768;
+  const contentWidth = isLargeScreen ? 720 : width;
+  const horizontalPadding = isLargeScreen ? (width - contentWidth) / 2 : 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -90,134 +96,93 @@ export default function HealthScreen() {
     .slice(0, 7);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + webTopPad }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </Pressable>
-        <Text style={styles.title}>Health & Wellness</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={[styles.container, { paddingTop: insets.top + webTopPad, paddingHorizontal: horizontalPadding }]}>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color={Colors.text} />
+          </Pressable>
+          <Text style={styles.title}>Health & Wellness</Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(400) : undefined}>
-          <LinearGradient
-            colors={['#5B9BD5', '#4A90D9']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.waterCard}
-          >
-            <View style={styles.waterHeader}>
-              <Ionicons name="water" size={28} color="#fff" />
-              <Text style={styles.waterTitle}>Water Intake</Text>
-            </View>
-            <Text style={styles.waterCount}>{waterGlasses}/8 glasses</Text>
-            <View style={styles.waterBar}>
-              <View style={[styles.waterFill, { width: `${Math.min(waterProgress, 100)}%` }]} />
-            </View>
-            <View style={styles.waterActions}>
-              <Pressable onPress={removeWater} style={styles.waterBtn}>
-                <Ionicons name="remove" size={24} color="#fff" />
-              </Pressable>
-              <View style={styles.glassGrid}>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.glass,
-                      i < waterGlasses && styles.glassFilled,
-                    ]}
-                  >
-                    <Ionicons
-                      name="water"
-                      size={16}
-                      color={i < waterGlasses ? '#fff' : 'rgba(255,255,255,0.3)'}
-                    />
-                  </View>
-                ))}
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(500) : undefined}>
+            <LinearGradient
+              colors={['#4CAF82', '#2E8B6A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.waterCard}
+            >
+              <View style={styles.waterHeader}>
+                <Ionicons name="water" size={32} color="#fff" />
+                <View>
+                  <Text style={styles.waterTitle}>Water Tracker</Text>
+                  <Text style={styles.waterSubtitle}>Goal: 8 Glasses</Text>
+                </View>
               </View>
-              <Pressable onPress={addWater} style={styles.waterBtn}>
-                <Ionicons name="add" size={24} color="#fff" />
-              </Pressable>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+              <View style={styles.waterControls}>
+                <Pressable onPress={removeWater} style={styles.waterBtn}>
+                  <Ionicons name="remove" size={24} color="#fff" />
+                </Pressable>
+                <Text style={styles.waterCount}>{waterGlasses}</Text>
+                <Pressable onPress={addWater} style={styles.waterBtn}>
+                  <Ionicons name="add" size={24} color="#fff" />
+                </Pressable>
+              </View>
+              <View style={styles.waterProgress}>
+                <View style={[styles.waterFill, { width: `${Math.min(waterProgress, 100)}%` }]} />
+              </View>
+            </LinearGradient>
+          </Animated.View>
 
-        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(200).duration(400) : undefined}>
-          <View style={styles.moodSection}>
+          <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(200).duration(500) : undefined}>
             <Text style={styles.sectionTitle}>How are you feeling?</Text>
             <View style={styles.moodRow}>
               {MOODS.map(m => (
                 <Pressable
                   key={m.value}
                   onPress={() => setMood(m.value)}
-                  style={[
-                    styles.moodBtn,
-                    todayMood === m.value && { backgroundColor: m.color + '20', borderColor: m.color },
-                  ]}
+                  style={[styles.moodBtn, todayMood === m.value && { backgroundColor: m.color + '20', borderColor: m.color }]}
                 >
-                  <Ionicons
-                    name={m.icon as any}
-                    size={28}
-                    color={todayMood === m.value ? m.color : Colors.textMuted}
-                  />
+                  <Ionicons name={m.icon as any} size={28} color={todayMood === m.value ? m.color : Colors.textMuted} />
                   <Text style={[styles.moodLabel, todayMood === m.value && { color: m.color }]}>{m.label}</Text>
                 </Pressable>
               ))}
             </View>
-          </View>
-        </Animated.View>
+          </Animated.View>
 
-        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(300).duration(400) : undefined}>
-          <View style={styles.historySection}>
+          <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(300).duration(500) : undefined}>
             <Text style={styles.sectionTitle}>Mood History</Text>
-            {last7.length === 0 ? (
+            {moodEntries.length === 0 ? (
               <View style={styles.empty}>
-                <Ionicons name="analytics-outline" size={36} color={Colors.textMuted} />
-                <Text style={styles.emptyText}>Track your mood daily</Text>
+                <Ionicons name="calendar-outline" size={32} color={Colors.textMuted} />
+                <Text style={styles.emptyText}>No entries yet</Text>
               </View>
             ) : (
-              <View style={styles.historyList}>
-                {last7.map(entry => {
-                  const moodInfo = MOODS.find(m => m.value === entry.mood);
+              <View style={styles.history}>
+                {last7.map((entry, idx) => {
+                  const mood = MOODS.find(m => m.value === entry.mood);
                   return (
-                    <View key={entry.id} style={styles.historyItem}>
+                    <View key={entry.id} style={[styles.historyItem, idx === last7.length - 1 && { borderBottomWidth: 0 }]}>
                       <Text style={styles.historyDate}>
-                        {new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        {new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' })}
                       </Text>
-                      <View style={styles.historyMood}>
-                        <Ionicons
-                          name={(moodInfo?.icon || 'ellipse') as any}
-                          size={20}
-                          color={moodInfo?.color || Colors.textMuted}
-                        />
-                        <Text style={[styles.historyLabel, { color: moodInfo?.color }]}>
-                          {moodInfo?.label}
-                        </Text>
+                      <View style={[styles.historyMood, { backgroundColor: (mood?.color || Colors.primary) + '18' }]}>
+                        <Ionicons name={mood?.icon as any || 'happy'} size={18} color={mood?.color || Colors.primary} />
+                        <Text style={[styles.historyMoodText, { color: mood?.color || Colors.primary }]}>{mood?.label}</Text>
                       </View>
                     </View>
                   );
                 })}
               </View>
             )}
-          </View>
-        </Animated.View>
-
-        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(400).duration(400) : undefined}>
-          <View style={styles.tipsCard}>
-            <Ionicons name="bulb" size={20} color={Colors.accent} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.tipsTitle}>Self-Care Reminder</Text>
-              <Text style={styles.tipsText}>
-                Take 5 minutes for deep breathing. Inhale for 4 counts, hold for 4, exhale for 4.
-              </Text>
-            </View>
-          </View>
-        </Animated.View>
-      </ScrollView>
+          </Animated.View>
+        </ScrollView>
+      </View>
     </View>
   );
 }

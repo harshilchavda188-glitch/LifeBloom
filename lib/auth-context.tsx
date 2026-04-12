@@ -38,7 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const stored = await AsyncStorage.getItem('currentUser');
       if (stored) {
-        setUser(JSON.parse(stored));
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          await AsyncStorage.removeItem('currentUser');
+          setUser(null);
+        }
       }
     } catch (e) {
       console.error('Failed to load user:', e);
@@ -50,7 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     try {
       const usersStr = await AsyncStorage.getItem('users');
-      const users: Array<User & { passwordHash: string }> = usersStr ? JSON.parse(usersStr) : [];
+      let users: Array<User & { passwordHash: string }> = [];
+      try {
+        users = usersStr ? JSON.parse(usersStr) : [];
+        if (!Array.isArray(users)) users = [];
+      } catch {
+        users = [];
+      }
+      
       const hash = await hashPassword(password);
       const found = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.passwordHash === hash);
       if (!found) {
@@ -68,7 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function register(name: string, email: string, password: string) {
     try {
       const usersStr = await AsyncStorage.getItem('users');
-      const users: Array<User & { passwordHash: string }> = usersStr ? JSON.parse(usersStr) : [];
+      let users: Array<User & { passwordHash: string }> = [];
+      try {
+        users = usersStr ? JSON.parse(usersStr) : [];
+        if (!Array.isArray(users)) users = [];
+      } catch {
+        users = [];
+      }
+
       const exists = users.find(u => u.email.toLowerCase() === email.toLowerCase());
       if (exists) {
         return { success: false, error: 'An account with this email already exists' };

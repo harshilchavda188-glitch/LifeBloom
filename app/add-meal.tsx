@@ -6,12 +6,13 @@ import {
   Pressable,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { addMeal, getToday, getWeekDates, getDayName } from '@/lib/storage';
+import { addMeal, getToday, getWeekDates, getDayName, isValidDate } from '@/lib/storage';
 
 const MEAL_TYPES = [
   { key: 'breakfast', label: 'Breakfast', icon: 'sunny' },
@@ -26,16 +27,33 @@ export default function AddMealSheet() {
   const [mealType, setMealType] = useState<typeof MEAL_TYPES[number]['key']>('lunch');
   const [day, setDay] = useState(getToday());
   const [ingredientsText, setIngredientsText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSave() {
-    if (!name.trim()) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const ingredients = ingredientsText
-      .split(',')
-      .map(i => i.trim())
-      .filter(i => i.length > 0);
-    await addMeal({ name: name.trim(), mealType, day, ingredients });
-    router.back();
+    if (!name.trim()) {
+      Alert.alert('Error', 'Please enter a meal name');
+      return;
+    }
+
+    if (!isValidDate(day)) {
+      Alert.alert('Error', 'Please select a valid day');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const ingredients = ingredientsText
+        .split(',')
+        .map(i => i.trim())
+        .filter(i => i.length > 0);
+      await addMeal({ name: name.trim(), mealType, day, ingredients });
+      router.back();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save meal. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -103,14 +121,14 @@ export default function AddMealSheet() {
 
       <Pressable
         onPress={handleSave}
-        disabled={!name.trim()}
+        disabled={!name.trim() || isSubmitting}
         style={({ pressed }) => [
           styles.saveBtn,
           pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-          !name.trim() && { opacity: 0.5 },
+          (!name.trim() || isSubmitting) && { opacity: 0.5 },
         ]}
       >
-        <Text style={styles.saveBtnText}>Add Meal</Text>
+        <Text style={styles.saveBtnText}>{isSubmitting ? 'Saving...' : 'Add Meal'}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -202,3 +220,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

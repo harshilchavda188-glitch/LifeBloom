@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +14,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
+import { 
+  getContentWidth, 
+  getHorizontalPadding, 
+  getWebTopPadding,
+  isDesktop,
+  responsiveSpacing,
+} from '@/lib/responsive';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -24,7 +32,7 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { getTasks, updateTask, deleteTask, Task, getToday } from '@/lib/storage';
+import { getTasks, updateTask, deleteTask, Task, getToday, saveTasks } from '@/lib/storage';
 
 const CATEGORIES = [
   { key: 'all', label: 'All', color: Colors.primary },
@@ -39,10 +47,17 @@ const VIEWS = ['Today', 'Week', 'All'] as const;
 
 export default function TasksScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedCat, setSelectedCat] = useState('all');
   const [selectedView, setSelectedView] = useState<typeof VIEWS[number]>('Today');
   const today = getToday();
+
+  // Enhanced responsive calculations
+  const contentWidth = getContentWidth();
+  const horizontalPadding = getHorizontalPadding();
+  const webTopPad = getWebTopPadding();
+  const isLargeScreen = isDesktop;
 
   useFocusEffect(
     useCallback(() => {
@@ -59,7 +74,11 @@ export default function TasksScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const task = tasks.find(t => t.id === id);
     if (task) {
-      await updateTask(id, { completed: !task.completed });
+      const isCompleting = !task.completed;
+      await updateTask(id, { 
+        completed: isCompleting,
+        completedAt: isCompleting ? new Date().toISOString() : undefined 
+      });
       loadTasks();
     }
   }
@@ -70,15 +89,37 @@ export default function TasksScreen() {
     loadTasks();
   }
 
+  async function clearCompleted() {
+    const completed = tasks.filter(t => t.completed);
+    if (completed.length === 0) return;
+
+    Alert.alert(
+      'Clear Completed',
+      `Are you sure you want to remove all ${completed.length} completed tasks?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Clear', 
+          style: 'destructive',
+          onPress: async () => {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            const remaining = tasks.filter(t => !t.completed);
+            await saveTasks(remaining);
+            loadTasks();
+          }
+        }
+      ]
+    );
+  }
+
   const filteredTasks = tasks.filter(t => {
     if (selectedCat !== 'all' && t.category !== selectedCat) return false;
     if (selectedView === 'Today') return t.dueDate === today;
     if (selectedView === 'Week') {
-      const taskDate = new Date(t.dueDate);
-      const todayDate = new Date(today);
-      const weekEnd = new Date(todayDate);
-      weekEnd.setDate(todayDate.getDate() + 7);
-      return taskDate >= todayDate && taskDate <= weekEnd;
+      const weekEnd = new Date(today);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      const weekEndStr = weekEnd.toISOString().split('T')[0];
+      return t.dueDate >= today && t.dueDate <= weekEndStr;
     }
     return true;
   }).sort((a, b) => {
@@ -92,118 +133,169 @@ export default function TasksScreen() {
 
   const completedCount = filteredTasks.filter(t => t.completed).length;
   const totalCount = filteredTasks.length;
-  const webTopPad = Platform.OS === 'web' ? 67 : 0;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + webTopPad }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Tasks</Text>
-        <Pressable
-          onPress={() => router.push('/add-task')}
-          style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
-        >
-          <Ionicons name="add" size={24} color="#fff" />
-        </Pressable>
-      </View>
-
-      {totalCount > 0 && (
-        <View style={styles.progressRow}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }]} />
-          </View>
-          <Text style={styles.progressText}>{completedCount}/{totalCount}</Text>
-        </View>
-      )}
-
-      <View style={styles.viewTabs}>
-        {VIEWS.map(v => (
-          <Pressable
-            key={v}
-            onPress={() => setSelectedView(v)}
-            style={[styles.viewTab, selectedView === v && styles.viewTabActive]}
-          >
-            <Text style={[styles.viewTabText, selectedView === v && styles.viewTabTextActive]}>{v}</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <FlatList
-        horizontal
-        data={CATEGORIES}
-        keyExtractor={c => c.key}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catList}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => setSelectedCat(item.key)}
-            style={[
-              styles.catChip,
-              selectedCat === item.key && { backgroundColor: item.color + '20', borderColor: item.color },
-            ]}
-          >
-            <View style={[styles.catDot, { backgroundColor: item.color }]} />
-            <Text style={[styles.catChipText, selectedCat === item.key && { color: item.color }]}>
-              {item.label}
-            </Text>
-          </Pressable>
-        )}
-      />
-
-      <FlatList
-        data={filteredTasks}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.taskList}
-        scrollEnabled={!!filteredTasks.length}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="checkbox-outline" size={48} color={Colors.textMuted} />
-            <Text style={styles.emptyTitle}>No tasks yet</Text>
-            <Text style={styles.emptySubtitle}>Tap + to create your first task</Text>
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(index * 50).duration(300) : undefined}>
+    <View style={[styles.container, { paddingTop: insets.top + webTopPad, paddingHorizontal: horizontalPadding }]}>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <View style={[styles.header, { paddingHorizontal: isLargeScreen ? responsiveSpacing(24) : responsiveSpacing(20) }]}>
+          <Text style={[styles.title, { fontSize: isLargeScreen ? 32 : 28 }]}>{isLargeScreen ? 'Task Manager' : 'Tasks'}</Text>
+          <View style={styles.headerActions}>
+            {completedCount > 0 && (
+              <Pressable
+                onPress={clearCompleted}
+                style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name="checkmark-done-circle-outline" size={24} color={Colors.primary} />
+              </Pressable>
+            )}
             <Pressable
-              onPress={() => toggleTask(item.id)}
-              onLongPress={() => removeTask(item.id)}
-              style={({ pressed }) => [styles.taskCard, pressed && { opacity: 0.9 }]}
+              onPress={() => router.push('/add-task')}
+              style={({ pressed }) => [
+                styles.addBtn, 
+                { 
+                  width: isLargeScreen ? 48 : 40,
+                  height: isLargeScreen ? 48 : 40,
+                  borderRadius: isLargeScreen ? 14 : 12,
+                },
+                pressed && { opacity: 0.8 }
+              ]}
             >
-              <View style={[styles.taskCatLine, { backgroundColor: Colors.categories[item.category] || Colors.primary }]} />
-              <View style={styles.taskContent}>
-                <View style={styles.taskTop}>
-                  <Pressable onPress={() => toggleTask(item.id)} style={styles.checkbox}>
-                    <Ionicons
-                      name={item.completed ? "checkmark-circle" : "ellipse-outline"}
-                      size={24}
-                      color={item.completed ? Colors.success : Colors.textMuted}
-                    />
-                  </Pressable>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.taskTitle, item.completed && styles.taskCompleted]} numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                    <View style={styles.taskMeta}>
-                      <Text style={styles.taskCatLabel}>{item.category}</Text>
-                      {item.recurring !== 'none' && (
-                        <View style={styles.recurBadge}>
-                          <Ionicons name="repeat" size={10} color={Colors.info} />
-                          <Text style={styles.recurText}>{item.recurring}</Text>
+              <Ionicons name="add" size={isLargeScreen ? 28 : 24} color="#fff" />
+            </Pressable>
+          </View>
+        </View>
+
+        {totalCount > 0 && (
+          <View style={styles.progressRow}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: totalCount > 0 ? `${(completedCount / totalCount) * 100}%` : '0%' }]} />
+            </View>
+            <Text style={styles.progressText}>{completedCount}/{totalCount}</Text>
+          </View>
+        )}
+
+        <View style={styles.viewTabs}>
+          {VIEWS.map(v => (
+            <Pressable
+              key={v}
+              onPress={() => setSelectedView(v)}
+              style={[styles.viewTab, selectedView === v && styles.viewTabActive]}
+            >
+              <Text style={[styles.viewTabText, selectedView === v && styles.viewTabTextActive]}>{v}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <FlatList
+          horizontal
+          data={CATEGORIES}
+          keyExtractor={c => c.key}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catList}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => setSelectedCat(item.key)}
+              style={[
+                styles.catChip,
+                selectedCat === item.key && { backgroundColor: item.color + '20', borderColor: item.color },
+              ]}
+            >
+              <View style={[styles.catDot, { backgroundColor: item.color }]} />
+              <Text style={[styles.catChipText, selectedCat === item.key && { color: item.color }]}>
+                {item.label}
+              </Text>
+            </Pressable>
+          )}
+        />
+
+        <FlatList
+          data={filteredTasks}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.taskList}
+          scrollEnabled={!!filteredTasks.length}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="checkbox-outline" size={48} color={Colors.textMuted} />
+              <Text style={styles.emptyTitle}>No tasks yet</Text>
+              <Text style={styles.emptySubtitle}>Tap + to create your first task</Text>
+            </View>
+          }
+          renderItem={({ item, index }) => {
+            const isOverdue = !item.completed && item.dueDate < today;
+            const completionTime = item.completedAt ? new Date(item.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+
+            return (
+              <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(index * 50).duration(300) : undefined}>
+                <Pressable
+                  onPress={() => toggleTask(item.id)}
+                  style={({ pressed }) => [styles.taskCard, pressed && { opacity: 0.9 }]}
+                >
+                  <View style={[styles.taskCatLine, { backgroundColor: Colors.categories[item.category] || Colors.primary }]} />
+                  <View style={styles.taskContent}>
+                    <View style={styles.taskTop}>
+                      <Pressable onPress={() => toggleTask(item.id)} style={styles.checkbox}>
+                        <Ionicons
+                          name={item.completed ? "checkmark-circle" : "ellipse-outline"}
+                          size={24}
+                          color={item.completed ? Colors.success : isOverdue ? Colors.danger : Colors.textMuted}
+                        />
+                      </Pressable>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[
+                          styles.taskTitle, 
+                          item.completed && styles.taskCompleted,
+                          isOverdue && styles.taskOverdue
+                        ]} numberOfLines={1}>
+                          {item.title}
+                        </Text>
+                        <View style={styles.taskMeta}>
+                          <Text style={styles.taskCatLabel}>{item.category}</Text>
+                          {item.dueTime && !item.completed && (
+                            <View style={styles.timeBadge}>
+                              <Ionicons name="time-outline" size={10} color={Colors.textMuted} />
+                              <Text style={styles.timeText}>{item.dueTime}</Text>
+                            </View>
+                          )}
+                          {isOverdue && (
+                            <View style={styles.delayBadge}>
+                              <Ionicons name="alert-circle" size={10} color={Colors.danger} />
+                              <Text style={styles.delayText}>Delayed</Text>
+                            </View>
+                          )}
+                          {item.completed && completionTime && (
+                            <View style={styles.completeBadge}>
+                              <Ionicons name="time-outline" size={10} color={Colors.success} />
+                              <Text style={styles.completeText}>{completionTime}</Text>
+                            </View>
+                          )}
+                          {item.recurring !== 'none' && (
+                            <View style={styles.recurBadge}>
+                              <Ionicons name="repeat" size={10} color={Colors.info} />
+                              <Text style={styles.recurText}>{item.recurring}</Text>
+                            </View>
+                          )}
+                          {item.priority === 'high' && (
+                            <View style={[styles.priBadge, { backgroundColor: Colors.danger + '18' }]}>
+                              <Ionicons name="flag" size={10} color={Colors.danger} />
+                            </View>
+                          )}
                         </View>
-                      )}
-                      {item.priority === 'high' && (
-                        <View style={[styles.priBadge, { backgroundColor: Colors.danger + '18' }]}>
-                          <Ionicons name="flag" size={10} color={Colors.danger} />
-                        </View>
-                      )}
+                      </View>
+                      <Pressable 
+                        onPress={() => removeTask(item.id)} 
+                        style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.7 }]}
+                      >
+                        <Ionicons name="trash-outline" size={20} color={Colors.textMuted} />
+                      </Pressable>
                     </View>
                   </View>
-                </View>
-              </View>
-            </Pressable>
-          </Animated.View>
-        )}
-      />
+                </Pressable>
+              </Animated.View>
+            );
+          }}
+        />
+      </View>
     </View>
   );
 }
@@ -225,6 +317,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_800ExtraBold',
     color: Colors.text,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   addBtn: {
     width: 40,
     height: 40,
@@ -232,6 +329,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  clearBtn: {
+    padding: 8,
+  },
+  deleteBtn: {
+    padding: 8,
+    marginLeft: 4,
   },
   progressRow: {
     flexDirection: 'row',
@@ -344,9 +448,13 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: Colors.textMuted,
   },
+  taskOverdue: {
+    color: Colors.danger,
+  },
   taskMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginTop: 4,
   },
@@ -355,6 +463,48 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_500Medium',
     color: Colors.textMuted,
     textTransform: 'capitalize',
+  },
+  delayBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.danger + '12',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  delayText: {
+    fontSize: 10,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.danger,
+  },
+  completeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.success + '12',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  completeText: {
+    fontSize: 10,
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.success,
+  },
+  timeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.inputBg,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  timeText: {
+    fontSize: 10,
+    fontFamily: 'Nunito_600SemiBold',
+    color: Colors.textMuted,
   },
   recurBadge: {
     flexDirection: 'row',

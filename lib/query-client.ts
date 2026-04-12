@@ -1,4 +1,5 @@
-import { fetch } from "expo/fetch";
+// Use native fetch - available in React Native 0.81+
+const fetch = globalThis.fetch;
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 /**

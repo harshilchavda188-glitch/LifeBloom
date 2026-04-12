@@ -6,12 +6,13 @@ import {
   Pressable,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { addExpense, getToday } from '@/lib/storage';
+import { addExpense, getToday, isValidDate } from '@/lib/storage';
 
 const EXPENSE_CATS = [
   { key: 'food', label: 'Food', icon: 'restaurant', color: '#F4A261' },
@@ -28,21 +29,46 @@ export default function AddExpenseSheet() {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'expense' | 'income'>('expense');
+  const [status, setStatus] = useState<'completed' | 'pending'>('completed');
   const [category, setCategory] = useState('food');
   const [date, setDate] = useState(getToday());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSave() {
     const num = parseFloat(amount);
-    if (!title.trim() || isNaN(num) || num <= 0) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    await addExpense({
-      title: title.trim(),
-      amount: num,
-      category,
-      type,
-      date,
-    });
-    router.back();
+    
+    if (!title.trim()) {
+      Alert.alert('Error', 'Please enter a description');
+      return;
+    }
+    
+    if (isNaN(num) || num <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+    
+    if (!isValidDate(date)) {
+      Alert.alert('Error', 'Please enter a valid date in YYYY-MM-DD format');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await addExpense({
+        title: title.trim(),
+        amount: num,
+        category,
+        type,
+        status,
+        date,
+      });
+      router.back();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save transaction. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -63,6 +89,24 @@ export default function AddExpenseSheet() {
         >
           <Ionicons name="arrow-up-circle" size={18} color={type === 'income' ? Colors.success : Colors.textMuted} />
           <Text style={[styles.typeText, type === 'income' && { color: Colors.success }]}>Income</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.label}>Status</Text>
+      <View style={styles.typeRow}>
+        <Pressable
+          onPress={() => setStatus('completed')}
+          style={[styles.typeBtn, status === 'completed' && { backgroundColor: Colors.info + '18', borderColor: Colors.info }]}
+        >
+          <Ionicons name="checkmark-circle" size={18} color={status === 'completed' ? Colors.info : Colors.textMuted} />
+          <Text style={[styles.typeText, status === 'completed' && { color: Colors.info }]}>Received/Paid</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setStatus('pending')}
+          style={[styles.typeBtn, status === 'pending' && { backgroundColor: Colors.warning + '18', borderColor: Colors.warning }]}
+        >
+          <Ionicons name="time" size={18} color={status === 'pending' ? Colors.warning : Colors.textMuted} />
+          <Text style={[styles.typeText, status === 'pending' && { color: Colors.warning }]}>Pending</Text>
         </Pressable>
       </View>
 
@@ -118,16 +162,16 @@ export default function AddExpenseSheet() {
 
       <Pressable
         onPress={handleSave}
-        disabled={!title.trim() || !amount}
+        disabled={!title.trim() || !amount || isSubmitting}
         style={({ pressed }) => [
           styles.saveBtn,
           { backgroundColor: type === 'income' ? Colors.success : Colors.primary },
           pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-          (!title.trim() || !amount) && { opacity: 0.5 },
+          (!title.trim() || !amount || isSubmitting) && { opacity: 0.5 },
         ]}
       >
         <Text style={styles.saveBtnText}>
-          {type === 'income' ? 'Add Income' : 'Add Expense'}
+          {isSubmitting ? 'Saving...' : type === 'income' ? 'Add Income' : 'Add Expense'}
         </Text>
       </Pressable>
     </ScrollView>
@@ -227,3 +271,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

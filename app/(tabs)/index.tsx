@@ -7,6 +7,7 @@ import {
   Pressable,
   Platform,
   RefreshControl,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { 
+  getContentWidth, 
+  getHorizontalPadding, 
+  getWebTopPadding,
+  getGridColumns,
+  isDesktop,
+  responsiveFontSize,
+  responsiveSpacing,
+} from '@/lib/responsive';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -33,11 +43,19 @@ import { useFocusEffect } from 'expo-router';
 export default function HomeScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [waterGlasses, setWaterGlasses] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const today = getToday();
+
+  // Enhanced responsive calculations
+  const contentWidth = getContentWidth();
+  const horizontalPadding = getHorizontalPadding();
+  const gridColumns = getGridColumns();
+  const webTopPad = getWebTopPadding();
+  const isLargeScreen = isDesktop;
 
   const loadData = useCallback(async () => {
     const [t, e, w] = await Promise.all([
@@ -81,21 +99,51 @@ export default function HomeScreen() {
     return 'Good Evening';
   };
 
-  const webTopPad = Platform.OS === 'web' ? 67 : 0;
+  // Dynamic responsive styles
+  const dynamicStyles = StyleSheet.create({
+    heroCard: {
+      marginHorizontal: horizontalPadding,
+      borderRadius: isLargeScreen ? 24 : 20,
+      padding: isLargeScreen ? 28 : 20,
+      marginBottom: responsiveSpacing(24),
+    },
+    modulesGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: horizontalPadding / 2,
+      gap: responsiveSpacing(12),
+      marginBottom: responsiveSpacing(24),
+    },
+    moduleCard: {
+      flex: 1,
+      minWidth: isLargeScreen ? 180 : 150,
+      maxWidth: isLargeScreen ? 220 : undefined,
+      backgroundColor: Colors.surface,
+      borderRadius: isLargeScreen ? 18 : 16,
+      padding: isLargeScreen ? 20 : 16,
+      borderWidth: 1,
+      borderColor: Colors.cardBorder,
+    },
+  });
 
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: Colors.background }]}
-      contentContainerStyle={{ paddingBottom: 120, paddingTop: insets.top + webTopPad + 16 }}
+      contentContainerStyle={{ 
+        paddingBottom: 120, 
+        paddingTop: insets.top + webTopPad + responsiveSpacing(16),
+        paddingHorizontal: horizontalPadding 
+      }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(500) : undefined}>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(100).duration(500) : undefined}>
         <LinearGradient
           colors={['#D4637A', '#E8859A', '#F4A261']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.heroCard}
+          style={dynamicStyles.heroCard}
         >
           <View style={styles.heroTop}>
             <View>
@@ -136,30 +184,35 @@ export default function HomeScreen() {
             label="Add Task"
             color={Colors.categories.personal}
             onPress={() => router.push('/add-task')}
+            isLargeScreen={isLargeScreen}
           />
           <QuickAction
             icon="cash"
             label="Add Expense"
             color={Colors.categories.finance}
             onPress={() => router.push('/add-expense')}
+            isLargeScreen={isLargeScreen}
           />
           <QuickAction
             icon="restaurant"
             label="Plan Meal"
             color={Colors.categories.home}
             onPress={() => router.push('/add-meal')}
+            isLargeScreen={isLargeScreen}
           />
           <QuickAction
             icon="water"
             label="Health"
             color={Colors.categories.health}
             onPress={() => router.push('/health')}
+            isLargeScreen={isLargeScreen}
           />
           <QuickAction
             icon="timer"
             label="Focus"
             color={Colors.categories.office}
             onPress={() => router.push('/pomodoro')}
+            isLargeScreen={isLargeScreen}
           />
         </ScrollView>
       </Animated.View>
@@ -227,61 +280,113 @@ export default function HomeScreen() {
 
       <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(500).duration(500) : undefined}>
         <Text style={styles.sectionTitle}>Modules</Text>
-        <View style={styles.modulesGrid}>
-          <ModuleCard
-            icon="home"
-            label="Home"
-            color="#F4A261"
-            onPress={() => router.push('/home-manage')}
-          />
-          <ModuleCard
-            icon="shield-checkmark"
-            label="Safety"
-            color="#E74C3C"
-            onPress={() => router.push('/safety')}
-          />
-          <ModuleCard
-            icon="heart"
-            label="Health"
-            color="#4CAF82"
-            onPress={() => router.push('/health')}
-          />
-          <ModuleCard
-            icon="timer"
-            label="Focus"
-            color="#5B9BD5"
-            onPress={() => router.push('/pomodoro')}
-          />
+        <View style={dynamicStyles.modulesGrid}>
+          {Array.from({ length: Math.ceil(4 / gridColumns) }).map((_, rowIndex) => (
+            <View key={rowIndex} style={{ 
+              flexDirection: 'row', 
+              gap: responsiveSpacing(12),
+              marginBottom: responsiveSpacing(12),
+              width: '100%'
+            }}>
+              {[0, 1, 2, 3].slice(rowIndex * gridColumns, (rowIndex + 1) * gridColumns).map((colIndex) => {
+                const modules = [
+                  { icon: "home", label: "Home", color: "#F4A261", route: '/home-manage' },
+                  { icon: "shield-checkmark", label: "Safety", color: "#E74C3C", route: '/safety' },
+                  { icon: "heart", label: "Health", color: "#4CAF82", route: '/health' },
+                  { icon: "timer", label: "Focus", color: "#5B9BD5", route: '/pomodoro' },
+                ];
+                const module = modules[rowIndex * gridColumns + colIndex];
+                if (!module) return null;
+                return (
+                  <ModuleCard
+                    key={module.label}
+                    icon={module.icon}
+                    label={module.label}
+                    color={module.color}
+                    onPress={() => router.push(module.route as any)}
+                    isLargeScreen={isLargeScreen}
+                  />
+                );
+              })}
+            </View>
+          ))}
         </View>
       </Animated.View>
-    </ScrollView>
+    </View>
+  </ScrollView>
   );
 }
 
-function QuickAction({ icon, label, color, onPress }: { icon: string; label: string; color: string; onPress: () => void }) {
+function QuickAction({ icon, label, color, onPress, isLargeScreen }: { 
+  icon: string; 
+  label: string; 
+  color: string; 
+  onPress: () => void;
+  isLargeScreen: boolean;
+}) {
+  const actionSize = isLargeScreen ? 84 : 76;
+  const iconSize = isLargeScreen ? 56 : 52;
+  
   return (
     <Pressable
       onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
-      style={({ pressed }) => [styles.quickAction, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
+      style={({ pressed }) => [
+        styles.quickAction, 
+        { width: actionSize },
+        pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }
+      ]}
     >
-      <View style={[styles.quickActionIcon, { backgroundColor: color + '18' }]}>
-        <Ionicons name={icon as any} size={22} color={color} />
+      <View style={[
+        styles.quickActionIcon, 
+        { 
+          backgroundColor: color + '18',
+          width: iconSize,
+          height: iconSize,
+          borderRadius: isLargeScreen ? 18 : 16,
+        }
+      ]}>
+        <Ionicons name={icon as any} size={isLargeScreen ? 24 : 22} color={color} />
       </View>
-      <Text style={styles.quickActionLabel}>{label}</Text>
+      <Text style={[
+        styles.quickActionLabel,
+        { fontSize: isLargeScreen ? 13 : 12 }
+      ]}>{label}</Text>
     </Pressable>
   );
 }
 
-function ModuleCard({ icon, label, color, onPress }: { icon: string; label: string; color: string; onPress: () => void }) {
+function ModuleCard({ icon, label, color, onPress, isLargeScreen }: { 
+  icon: string; 
+  label: string; 
+  color: string; 
+  onPress: () => void;
+  isLargeScreen: boolean;
+}) {
   return (
     <Pressable
       onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onPress(); }}
-      style={({ pressed }) => [styles.moduleCard, pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }]}
+      style={({ pressed }) => [
+        styles.moduleCard,
+        {
+          minWidth: isLargeScreen ? 180 : 150,
+          maxWidth: isLargeScreen ? 220 : undefined,
+          borderRadius: isLargeScreen ? 18 : 16,
+          padding: isLargeScreen ? 20 : 16,
+        },
+        pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] }
+      ]}
     >
-      <View style={[styles.moduleIcon, { backgroundColor: color + '18' }]}>
-        <Ionicons name={icon as any} size={24} color={color} />
+      <View style={[styles.moduleIcon, { 
+        backgroundColor: color + '18',
+        width: isLargeScreen ? 48 : 44,
+        height: isLargeScreen ? 48 : 44,
+        borderRadius: isLargeScreen ? 16 : 14,
+      }]}>
+        <Ionicons name={icon as any} size={isLargeScreen ? 26 : 24} color={color} />
       </View>
-      <Text style={styles.moduleLabel}>{label}</Text>
+      <Text style={[styles.moduleLabel, { 
+        fontSize: isLargeScreen ? 15 : 14,
+      }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -484,18 +589,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 12,
-    gap: 10,
+    gap: 12,
     marginBottom: 24,
   },
   moduleCard: {
-    flexBasis: '45%',
-    flexGrow: 1,
+    flex: 1,
+    minWidth: 150,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
-    marginHorizontal: 4,
   },
   moduleIcon: {
     width: 44,

@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/lib/auth-context';
+import { 
+  getContentWidth, 
+  getHorizontalPadding, 
+  getWebTopPadding,
+  isDesktop,
+} from '@/lib/responsive';
 
 const MENU_ITEMS = [
   {
@@ -29,8 +36,14 @@ const MENU_ITEMS = [
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { user, logout } = useAuth();
-  const webTopPad = Platform.OS === 'web' ? 67 : 0;
+  
+  // Enhanced responsive calculations
+  const contentWidth = getContentWidth();
+  const horizontalPadding = getHorizontalPadding();
+  const webTopPad = getWebTopPadding();
+  const isLargeScreen = isDesktop;
 
   async function handleLogout() {
     Alert.alert(
@@ -53,58 +66,64 @@ export default function MoreScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: Colors.background }]}
-      contentContainerStyle={{ paddingBottom: 120, paddingTop: insets.top + webTopPad + 12 }}
+      contentContainerStyle={{ 
+        paddingBottom: 120, 
+        paddingTop: insets.top + webTopPad + 12,
+        paddingHorizontal: horizontalPadding
+      }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>More</Text>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <Text style={styles.title}>More</Text>
 
-      <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Ionicons name="person" size={28} color={Colors.primary} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.profileName}>{user?.name || 'User'}</Text>
-          <Text style={styles.profileEmail}>{user?.email || ''}</Text>
-        </View>
-      </View>
-
-      {MENU_ITEMS.map(section => (
-        <View key={section.section} style={styles.section}>
-          <Text style={styles.sectionTitle}>{section.section}</Text>
-          <View style={styles.sectionCard}>
-            {section.items.map((item, index) => (
-              <Pressable
-                key={item.key}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(item.route as any);
-                }}
-                style={({ pressed }) => [
-                  styles.menuItem,
-                  pressed && { backgroundColor: Colors.inputBg },
-                  index < section.items.length - 1 && styles.menuItemBorder,
-                ]}
-              >
-                <View style={[styles.menuIcon, { backgroundColor: item.color + '18' }]}>
-                  <Ionicons name={item.icon as any} size={20} color={item.color} />
-                </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </Pressable>
-            ))}
+        <View style={styles.profileCard}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={28} color={Colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.profileName}>{user?.name || 'User'}</Text>
+            <Text style={styles.profileEmail}>{user?.email || ''}</Text>
           </View>
         </View>
-      ))}
 
-      <Pressable
-        onPress={handleLogout}
-        style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.85 }]}
-      >
-        <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
-        <Text style={styles.logoutText}>Sign Out</Text>
-      </Pressable>
+        {MENU_ITEMS.map(section => (
+          <View key={section.section} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.section}</Text>
+            <View style={styles.sectionCard}>
+              {section.items.map((item, index) => (
+                <Pressable
+                  key={item.key}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push(item.route as any);
+                  }}
+                  style={({ pressed }) => [
+                    styles.menuItem,
+                    pressed && { backgroundColor: Colors.inputBg },
+                    index < section.items.length - 1 && styles.menuItemBorder,
+                  ]}
+                >
+                  <View style={[styles.menuIcon, { backgroundColor: item.color + '18' }]}>
+                    <Ionicons name={item.icon as any} size={20} color={item.color} />
+                  </View>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ))}
 
-      <Text style={styles.version}>LifeBloom v1.0</Text>
+        <Pressable
+          onPress={handleLogout}
+          style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.85 }]}
+        >
+          <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </Pressable>
+
+        <Text style={styles.version}>LifeBloom v1.0</Text>
+      </View>
     </ScrollView>
   );
 }

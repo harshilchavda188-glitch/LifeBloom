@@ -7,6 +7,7 @@ import {
   TextInput,
   FlatList,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +23,7 @@ const FREQUENCIES = ['daily', 'weekly', 'monthly'] as const;
 
 export default function HomeManageScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [tasks, setTasks] = useState<CleaningTask[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState('');
@@ -29,6 +31,10 @@ export default function HomeManageScreen() {
   const [frequency, setFrequency] = useState<typeof FREQUENCIES[number]>('weekly');
   const today = getToday();
   const webTopPad = Platform.OS === 'web' ? 67 : 0;
+
+  const isLargeScreen = width > 768;
+  const contentWidth = isLargeScreen ? 720 : width;
+  const horizontalPadding = isLargeScreen ? (width - contentWidth) / 2 : 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -89,23 +95,24 @@ export default function HomeManageScreen() {
   const upcomingTasks = tasks.filter(t => t.nextDue > today);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + webTopPad }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </Pressable>
-        <Text style={styles.title}>Home</Text>
-        <Pressable onPress={() => setShowAdd(!showAdd)}>
-          <Ionicons name={showAdd ? "close" : "add-circle"} size={28} color={Colors.primary} />
-        </Pressable>
-      </View>
+    <View style={[styles.container, { paddingTop: insets.top + webTopPad, paddingHorizontal: horizontalPadding }]}>
+      <View style={isLargeScreen ? { alignSelf: 'center', width: contentWidth } : { width: '100%' }}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color={Colors.text} />
+          </Pressable>
+          <Text style={styles.title}>Home</Text>
+          <Pressable onPress={() => setShowAdd(!showAdd)}>
+            <Ionicons name={showAdd ? "close" : "add-circle"} size={28} color={Colors.primary} />
+          </Pressable>
+        </View>
 
-      <FlatList
-        data={[...dueTasks, ...upcomingTasks]}
-        keyExtractor={item => item.id}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={!!tasks.length || showAdd}
+        <FlatList
+          data={[...dueTasks, ...upcomingTasks]}
+          keyExtractor={item => item.id}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={!!tasks.length || showAdd}
         ListHeaderComponent={
           <>
             {showAdd && (
@@ -202,7 +209,8 @@ export default function HomeManageScreen() {
             </Animated.View>
           );
         }}
-      />
+        />
+      </View>
     </View>
   );
 }
