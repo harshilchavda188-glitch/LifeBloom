@@ -7,6 +7,7 @@ import {
   FlatList,
   Platform,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +22,7 @@ import {
   isDesktop,
   responsiveSpacing,
 } from '@/lib/responsive';
+import { getTasks, updateTask, deleteTask, Task, getToday, saveTasks } from '@/lib/storage';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -32,7 +34,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { getTasks, updateTask, deleteTask, Task, getToday, saveTasks } from '@/lib/storage';
 
 const CATEGORIES = [
   { key: 'all', label: 'All', color: Colors.primary },

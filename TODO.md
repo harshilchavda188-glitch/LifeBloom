@@ -1,26 +1,14 @@
-# Task: Fix Expo Router web bundle 500/MIME error - COMPLETE
+# Fixing All TypeScript & ESLint Errors in LifeBloom
 
-## Completed Steps
+## Progress Tracker
 
-### 1. [x] Update server/index.ts ✅
-   - Proxy for `/node_modules/*` & `*.bundle` to localhost:8081 added.
-   - Error handler updated for JS MIME on bundle paths.
-
-### 2. [x] Update package.json ✅
-   - `dev:web` script with concurrently (server + Expo web).
-   - `start` & `expo:dev` updated, concurrently installed.
-
-### 3. [x] Update run.txt ✅
-   - Now `npm run dev:web`.
-
-### 4. [x] Test Instructions ✅
-   - Run `npm run dev:web`.
-   - Accept Expo port prompt if 8081 conflicted.
-   - http://localhost:5000 → Network tab: bundles 200 JS MIME, no 500 errors.
-
-### 5. [x] Complete ✅
-
-**Additional Fix:** Corrected syntax error in `app/pomodoro.tsx` (line 211: statLabel"> → statLabel">) that was blocking Metro bundling.
-
-**Final Status:** Server proxy + code syntax fixed. Bundling succeeds, original 500/MIME error resolved.
-
+### Step 1: Fix FABStyles.ts (Platform import) [PENDING]
+### Step 2: Fix lib/auth-context.tsx (expose openAIKey/setOpenAIKey) [PENDING]
+### Step 3: Fix app/ai-chat.tsx (use exposed auth methods) [PENDING]
+### Step 4: Fix app/health.tsx (add missing styles) [PENDING]
+### Step 5: Fix app/(tabs)/meals.tsx (add loadMeals function) [PENDING]
+### Step 6: Fix app/(tabs)/tasks.tsx (import Alert) [PENDING]
+### Step 7: Fix server/index.ts (remove invalid logLevel) [PENDING]
+### Step 8: Fix server/routes.ts (comment Runa import) [PENDING]
+### Step 9: Run npx tsc --noEmit && npx expo lint --fix [PENDING]
+### Step 10: Verify no errors [PENDING]

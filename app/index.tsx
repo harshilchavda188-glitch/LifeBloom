@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
+import { useAuth } from '@/lib/auth-context';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -28,7 +29,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { useAuth } from '@/lib/auth-context';
 
 const { width } = Dimensions.get('window');
 

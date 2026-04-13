@@ -169,8 +169,7 @@ function configureExpoAndLanding(app: express.Application) {
     "/node_modules",
     createProxyMiddleware({
       target: "http://localhost:8081",
-      changeOrigin: true,
-      logLevel: "silent" as const,
+      changeOrigin: true
     })
   );
   // Catch-all proxy for bundle requests with query params
@@ -178,8 +177,7 @@ function configureExpoAndLanding(app: express.Application) {
     if (req.path.endsWith('.bundle') || req.path.includes('/node_modules/')) {
       const proxy = createProxyMiddleware({
         target: "http://localhost:8081",
-        changeOrigin: true,
-        logLevel: "silent" as const,
+        changeOrigin: true
       });
       return proxy(req, res, next);
     }

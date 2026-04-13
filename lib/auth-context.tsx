@@ -11,6 +11,8 @@ interface User {
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
+  openAIKey: string | null;
+  setOpenAIKey: (key: string) => Promise<void>;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -28,18 +30,23 @@ async function hashPassword(password: string): Promise<string> {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [openAIKey, setOpenAIKeyState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadUser();
   }, []);
 
-  async function loadUser() {
+async function loadUser() {
     try {
       const stored = await AsyncStorage.getItem('currentUser');
       if (stored) {
         try {
-          setUser(JSON.parse(stored));
+          const userData = JSON.parse(stored);
+          setUser(userData);
+          // Load OpenAI key
+          const key = await AsyncStorage.getItem('openAIKey');
+          setOpenAIKeyState(key || null);
         } catch {
           await AsyncStorage.removeItem('currentUser');
           setUser(null);
@@ -106,18 +113,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function logout() {
+async function logout() {
     await AsyncStorage.removeItem('currentUser');
+    await AsyncStorage.removeItem('openAIKey');
     setUser(null);
+    setOpenAIKeyState(null);
+  }
+
+  async function setOpenAIKey(key: string) {
+    await AsyncStorage.setItem('openAIKey', key);
+    setOpenAIKeyState(key);
   }
 
   const value = useMemo(() => ({
     user,
     isLoading,
+    openAIKey,
+    setOpenAIKey,
     login,
     register,
     logout,
-  }), [user, isLoading]);
+  }), [user, isLoading, openAIKey]);
 
   return (
     <AuthContext.Provider value={value}>

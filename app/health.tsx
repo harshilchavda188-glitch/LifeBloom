@@ -228,6 +228,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     color: '#fff',
   },
+  waterSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito_500Medium',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  waterControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
   waterCount: {
     fontSize: 28,
     fontFamily: 'Nunito_800ExtraBold',
@@ -239,11 +250,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: 'rgba(255,255,255,0.2)',
     marginBottom: 16,
-  },
-  waterFill: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#fff',
   },
   waterActions: {
     flexDirection: 'row',
@@ -314,14 +320,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.cardBorder,
   },
-  historyItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
   historyDate: {
     fontSize: 13,
     fontFamily: 'Nunito_500Medium',
@@ -331,10 +329,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  historyLabel: {
-    fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
   },
   tipsCard: {
     flexDirection: 'row',
@@ -360,6 +354,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
     gap: 8,
+  },
+  waterProgress: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    overflow: 'hidden',
+  },
+  waterFill: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+  },
+  history: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    marginHorizontal: 16,
+  },
+  historyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  historyDate: {
+    fontSize: 13,
+    fontFamily: 'Nunito_500Medium',
+    color: Colors.textSecondary,
+  },
+  historyMood: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  historyMoodText: {
+    fontSize: 13,
+    fontFamily: 'Nunito_600SemiBold',
+    marginLeft: 4,
   },
   emptyText: {
     fontSize: 14,

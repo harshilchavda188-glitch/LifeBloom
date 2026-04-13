@@ -23,6 +23,7 @@ import {
   isDesktop,
   responsiveSpacing,
 } from '@/lib/responsive';
+import { getExpenses, deleteExpense, updateExpense, Expense, getToday, formatINR, saveExpenses } from '@/lib/storage';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -34,7 +35,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { getExpenses, deleteExpense, updateExpense, Expense, getToday, formatINR, saveExpenses } from '@/lib/storage';
 
 const EXPENSE_CATEGORIES = [
   { key: 'food', label: 'Food', icon: 'restaurant', color: '#F4A261' },

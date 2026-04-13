@@ -21,6 +21,8 @@ import {
   getWebTopPadding,
   isDesktop,
 } from '@/lib/responsive';
+import { getMeals, deleteMeal, getGroceryList, saveGroceryList, Meal, GroceryItem, getWeekDates, getDayName, saveMeals } from '@/lib/storage';
+import * as Crypto from 'expo-crypto';
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -32,8 +34,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { getMeals, deleteMeal, getGroceryList, saveGroceryList, Meal, GroceryItem, getWeekDates, getDayName, saveMeals } from '@/lib/storage';
-import * as Crypto from 'expo-crypto';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 const MEAL_ICONS: Record<string, string> = {
@@ -63,11 +63,16 @@ export default function MealsScreen() {
     }, [])
   );
 
-  async function loadData() {
+async function loadData() {
     const [m, g] = await Promise.all([getMeals(), getGroceryList()]);
     setMeals(m);
     setGroceryList(g);
   }
+
+  const loadMeals = async () => {
+    const m = await getMeals();
+    setMeals(m);
+  };
 
   async function removeMeal(id: string) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

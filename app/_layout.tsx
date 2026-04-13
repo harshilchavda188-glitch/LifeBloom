@@ -54,6 +54,15 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="ai-chat"
+        options={{
+          presentation: "modal",
+          sheetAllowedDetents: [0.8, 1.0],
+          sheetGrabberVisible: true,
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

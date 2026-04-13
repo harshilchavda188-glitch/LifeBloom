@@ -9,7 +9,7 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router , useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,9 @@ import {
   responsiveFontSize,
   responsiveSpacing,
 } from '@/lib/responsive';
+import { useAuth } from '@/lib/auth-context';
+import { getTasks, getExpenses, getWaterLog, getToday, formatINR, Task, Expense } from '@/lib/storage';
+
 
 const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
   web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
@@ -36,9 +39,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-import { useAuth } from '@/lib/auth-context';
-import { getTasks, getExpenses, getWaterLog, getToday, formatINR, Task, Expense } from '@/lib/storage';
-import { useFocusEffect } from 'expo-router';
 
 export default function HomeScreen() {
   const { user } = useAuth();
