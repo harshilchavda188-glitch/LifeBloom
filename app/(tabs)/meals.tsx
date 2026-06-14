@@ -7,7 +7,6 @@ import {
   FlatList,
   Platform,
   ScrollView,
-  useWindowDimensions,
   Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -35,7 +34,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
   },
 }) as any;
 
-const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 const MEAL_ICONS: Record<string, string> = {
   breakfast: 'sunny',
   lunch: 'restaurant',
@@ -45,7 +43,6 @@ const MEAL_ICONS: Record<string, string> = {
 
 export default function MealsScreen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const [meals, setMeals] = useState<Meal[]>([]);
   const [groceryList, setGroceryList] = useState<GroceryItem[]>([]);
   const [activeTab, setActiveTab] = useState<'planner' | 'grocery'>('planner');

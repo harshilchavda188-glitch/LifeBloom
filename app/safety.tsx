@@ -9,7 +9,6 @@ import {
   Alert,
   Linking,
   Platform,
-  useWindowDimensions,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,7 +32,6 @@ import {
 
 export default function SafetyScreen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState('');

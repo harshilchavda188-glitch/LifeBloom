@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -57,7 +57,7 @@ export default function PomodoroScreen() {
 
   useEffect(() => {
     progress.value = withTiming(1 - seconds / totalSeconds, { duration: 300 });
-  }, [seconds, totalSeconds]);
+  }, [seconds, totalSeconds, progress]);
 
   // Clear interval on unmount
   useEffect(() => {
@@ -107,6 +107,7 @@ export default function PomodoroScreen() {
       setSeconds(MODES[mode].minutes * 60);
       progress.value = 0;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
   function switchMode(index: number) {

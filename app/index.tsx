@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,8 +28,6 @@ const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: numbe
     elevation: Math.ceil(radius / 2),
   },
 }) as any;
-
-const { width } = Dimensions.get('window');
 
 export default function AuthScreen() {
   const { user, isLoading, login, register } = useAuth();

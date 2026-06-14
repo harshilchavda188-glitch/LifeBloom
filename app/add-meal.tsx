@@ -49,7 +49,7 @@ export default function AddMealSheet() {
         .filter(i => i.length > 0);
       await addMeal({ name: name.trim(), mealType, day, ingredients });
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save meal. Please try again.');
     } finally {
       setIsSubmitting(false);

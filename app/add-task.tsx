@@ -64,7 +64,7 @@ export default function AddTaskSheet() {
         priority,
       });
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save task. Please try again.');
     } finally {
       setIsSubmitting(false);

@@ -1,5 +1,4 @@
 import { StyleSheet, Platform } from 'react-native';
-import Colors from '@/constants/colors';
 import { responsiveSpacing } from '@/lib/responsive';
 
 const styles = StyleSheet.create({

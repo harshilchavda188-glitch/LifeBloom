@@ -48,17 +48,15 @@ export default function HealthScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadData();
-    }, [])
+      (async () => {
+        const [w, m] = await Promise.all([getWaterLog(today), getMoodEntries()]);
+        setWaterGlasses(w.glasses);
+        setMoodEntries(m);
+        const todayEntry = m.find(e => e.date === today);
+        if (todayEntry) setTodayMood(todayEntry.mood);
+      })();
+    }, [today])
   );
-
-  async function loadData() {
-    const [w, m] = await Promise.all([getWaterLog(today), getMoodEntries()]);
-    setWaterGlasses(w.glasses);
-    setMoodEntries(m);
-    const todayEntry = m.find(e => e.date === today);
-    if (todayEntry) setTodayMood(todayEntry.mood);
-  }
 
   async function addWater() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -308,27 +306,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Nunito_600SemiBold',
     color: Colors.textMuted,
-  },
-  historySection: {
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
-  historyList: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
-  historyDate: {
-    fontSize: 13,
-    fontFamily: 'Nunito_500Medium',
-    color: Colors.textSecondary,
-  },
-  historyMood: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
   },
   tipsCard: {
     flexDirection: 'row',

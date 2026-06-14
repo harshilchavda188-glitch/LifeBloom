@@ -5,9 +5,7 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  Platform,
   Alert,
-  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,7 +34,6 @@ const MENU_ITEMS = [
 
 export default function MoreScreen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const { user, logout } = useAuth();
   
   // Enhanced responsive calculations

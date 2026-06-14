@@ -6,7 +6,6 @@ import {
   Pressable,
   FlatList,
   Platform,
-  useWindowDimensions,
   Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -21,7 +20,6 @@ import {
   getHorizontalPadding, 
   getWebTopPadding,
   isDesktop,
-  responsiveSpacing,
 } from '@/lib/responsive';
 import { getExpenses, deleteExpense, updateExpense, Expense, getToday, formatINR, saveExpenses } from '@/lib/storage';
 
@@ -49,7 +47,6 @@ const EXPENSE_CATEGORIES = [
 
 export default function BudgetScreen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [viewMode, setViewMode] = useState<'all' | 'income' | 'expense' | 'pending'>('all');
   const today = getToday();

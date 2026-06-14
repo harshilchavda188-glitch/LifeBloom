@@ -32,9 +32,9 @@ export default function AIChat() {
   const flatListRef = useRef<FlatList>(null);
 const { openAIKey } = useAuth();
   const { mutate: sendChat, isPending: chatLoading } = useAIChat();
-  const { mutate: generateTask, isPending: taskLoading } = useGenerateTask();
-  const { mutate: suggestMeal, isPending: mealLoading } = useSuggestMeal();
-  const { mutate: budgetTip, isPending: tipLoading } = useBudgetTip();
+  const { isPending: taskLoading } = useGenerateTask();
+  const { isPending: mealLoading } = useSuggestMeal();
+  const { isPending: tipLoading } = useBudgetTip();
 
   const loading = chatLoading || taskLoading || mealLoading || tipLoading;
 

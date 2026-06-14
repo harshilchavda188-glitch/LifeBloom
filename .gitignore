@@ -39,3 +39,11 @@ yarn-error.*
 .vercel
 
 .env
+
+# PHP
+php/vendor/
+php/composer.lock
+
+# Windows
+*.bat
+*.log

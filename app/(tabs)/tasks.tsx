@@ -6,7 +6,6 @@ import {
   Pressable,
   FlatList,
   Platform,
-  useWindowDimensions,
   Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
@@ -48,7 +47,6 @@ const VIEWS = ['Today', 'Week', 'All'] as const;
 
 export default function TasksScreen() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedCat, setSelectedCat] = useState('all');
   const [selectedView, setSelectedView] = useState<typeof VIEWS[number]>('Today');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,10 @@ import {
   Pressable,
   Platform,
   RefreshControl,
-  useWindowDimensions,
 } from 'react-native';
 import { router , useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -22,28 +21,15 @@ import {
   getWebTopPadding,
   getGridColumns,
   isDesktop,
-  responsiveFontSize,
   responsiveSpacing,
 } from '@/lib/responsive';
 import { useAuth } from '@/lib/auth-context';
 import { getTasks, getExpenses, getWaterLog, getToday, formatINR, Task, Expense } from '@/lib/storage';
 
 
-const createShadow = (opacity: number = 0.08, radius: number = 4, offsetY: number = 1) => Platform.select({
-  web: { boxShadow: `0px ${offsetY}px ${radius}px rgba(0,0,0,${opacity})` },
-  default: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: offsetY },
-    shadowOpacity: opacity,
-    shadowRadius: radius,
-    elevation: Math.ceil(radius / 2),
-  },
-}) as any;
-
 export default function HomeScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [waterGlasses, setWaterGlasses] = useState(0);
@@ -249,7 +235,7 @@ export default function HomeScreen() {
       </Animated.View>
 
       <Animated.View entering={Platform.OS !== 'web' ? FadeInDown.delay(400).duration(500) : undefined}>
-        <Text style={styles.sectionTitle}>Today's Tasks</Text>
+        <Text style={styles.sectionTitle}>{"Today's Tasks"}</Text>
         {todayTasks.length === 0 ? (
           <View style={styles.emptyCard}>
             <Ionicons name="checkbox-outline" size={32} color={Colors.textMuted} />
@@ -258,7 +244,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/add-task')}
               style={styles.emptyBtn}
             >
-              <Text style={styles.emptyBtnText}>Add a task</Text>
+              <Text style={styles.emptyBtnText}>Add a Task</Text>
             </Pressable>
           </View>
         ) : (

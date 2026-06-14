@@ -64,7 +64,7 @@ export default function AddExpenseSheet() {
         date,
       });
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save transaction. Please try again.');
     } finally {
       setIsSubmitting(false);
