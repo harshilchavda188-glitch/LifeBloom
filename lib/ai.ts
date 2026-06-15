@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './auth-context';
+import { getApiUrl } from './query-client';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = getApiUrl();
 
 export interface AIMessage {
   role: 'user' | 'assistant';
@@ -40,7 +41,7 @@ export function useGenerateTask() {
 
   return useMutation({
     mutationFn: async (input: GenerateTaskInput) => {
-      const response = await fetch(`${API_BASE}/ai/generate-task`, {
+      const response = await fetch(`${API_BASE}/api/ai/generate-task`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...input, userId: user?.id }),
@@ -61,7 +62,7 @@ export function useSuggestMeal() {
 
   return useMutation({
     mutationFn: async (prompt: string) => {
-      const response = await fetch(`${API_BASE}/ai/suggest-meal`, {
+      const response = await fetch(`${API_BASE}/api/ai/suggest-meal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, userId: user?.id }),
@@ -80,7 +81,7 @@ export function useBudgetTip() {
 
   return useMutation({
     mutationFn: async (prompt: string) => {
-      const response = await fetch(`${API_BASE}/ai/budget-tip`, {
+      const response = await fetch(`${API_BASE}/api/ai/budget-tip`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),

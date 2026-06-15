@@ -38,8 +38,6 @@ yarn-error.*
 *.tsbuildinfo
 .vercel
 
-.env
-
 # PHP
 php/vendor/
 php/composer.lock

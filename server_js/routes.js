@@ -1,12 +1,9 @@
-import type { Express } from "express";
-import { createServer, type Server } from "node:http";
-import { z } from "zod";
-import * as db from "./database";
+const db = require("./database");
 
-export async function registerRoutes(app: Express): Promise<Server> {
+function registerRoutes(app) {
   // ---- USERS ----
   app.get("/api/users", (req, res) => {
-    const userId = req.query.user_id as string;
+    const userId = req.query.user_id;
     if (userId) {
       const user = db.getUser(userId);
       if (!user) return res.status(404).json({ error: "User not found" });
@@ -26,14 +23,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = db.createUser({ username, password, name, email });
       const { password: _, ...safe } = user;
       res.status(201).json(safe);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to create user";
-      res.status(400).json({ error: msg });
+    } catch (e) {
+      res.status(400).json({ error: e.message || "Failed to create user" });
     }
   });
 
   app.put("/api/users", (req, res) => {
-    const id = req.query.id as string;
+    const id = req.query.id;
     if (!id) return res.status(400).json({ error: "id required" });
     const user = db.updateUser(id, req.body);
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -42,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.delete("/api/users", (req, res) => {
-    const id = req.query.id as string;
+    const id = req.query.id;
     if (!id) return res.status(400).json({ error: "id required" });
     db.deleteUser(id);
     res.json({ message: "User deleted" });
@@ -50,8 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- TASKS ----
   app.get("/api/tasks", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getTasks(userId));
+    res.json(db.getTasks(req.query.user_id));
   });
 
   app.get("/api/tasks/:id", (req, res) => {
@@ -90,8 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- EXPENSES ----
   app.get("/api/expenses", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getExpenses(userId));
+    res.json(db.getExpenses(req.query.user_id));
   });
 
   app.get("/api/expenses/:id", (req, res) => {
@@ -130,8 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- MEALS ----
   app.get("/api/meals", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getMeals(userId));
+    res.json(db.getMeals(req.query.user_id));
   });
 
   app.get("/api/meals/:id", (req, res) => {
@@ -155,12 +148,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(meal);
   });
 
-  app.put("/api/meals/:id", (req, res) => {
-    const meal = db.updateMeal(req.params.id, req.body);
-    if (!meal) return res.status(404).json({ error: "Meal not found" });
-    res.json(meal);
-  });
-
   app.delete("/api/meals/:id", (req, res) => {
     db.deleteMeal(req.params.id);
     res.json({ message: "Meal deleted" });
@@ -168,8 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- GROCERY ----
   app.get("/api/grocery", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getGroceryItems(userId));
+    res.json(db.getGroceryItems(req.query.user_id));
   });
 
   app.post("/api/grocery", (req, res) => {
@@ -197,8 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- CLEANING ----
   app.get("/api/cleaning", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getCleaningTasks(userId));
+    res.json(db.getCleaningTasks(req.query.user_id));
   });
 
   app.post("/api/cleaning", (req, res) => {
@@ -217,21 +202,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(task);
   });
 
-  app.put("/api/cleaning/:id", (req, res) => {
-    const task = db.updateCleaningTask(req.params.id, req.body);
-    if (!task) return res.status(404).json({ error: "Task not found" });
-    res.json(task);
-  });
-
   app.delete("/api/cleaning/:id", (req, res) => {
     db.deleteCleaningTask(req.params.id);
     res.json({ message: "Task deleted" });
   });
 
-  // ---- EMERGENCY CONTACTS ----
+  // ---- EMERGENCY ----
   app.get("/api/emergency", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getEmergencyContacts(userId));
+    res.json(db.getEmergencyContacts(req.query.user_id));
   });
 
   app.post("/api/emergency", (req, res) => {
@@ -248,12 +226,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(contact);
   });
 
-  app.put("/api/emergency/:id", (req, res) => {
-    const contact = db.updateEmergencyContact(req.params.id, req.body);
-    if (!contact) return res.status(404).json({ error: "Contact not found" });
-    res.json(contact);
-  });
-
   app.delete("/api/emergency/:id", (req, res) => {
     db.deleteEmergencyContact(req.params.id);
     res.json({ message: "Contact deleted" });
@@ -261,9 +233,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- WATER ----
   app.get("/api/water", (req, res) => {
-    const userId = req.query.user_id as string;
+    const userId = req.query.user_id;
     if (!userId) return res.status(400).json({ error: "user_id required" });
-    const date = req.query.date as string;
+    const date = req.query.date;
     if (date) {
       const log = db.getWaterLogByDate(userId, date);
       return res.json(log || { logDate: date, glasses: 0 });
@@ -282,8 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---- MOOD ----
   app.get("/api/mood", (req, res) => {
-    const userId = req.query.user_id as string;
-    res.json(db.getMoodEntries(userId));
+    res.json(db.getMoodEntries(req.query.user_id));
   });
 
   app.post("/api/mood", (req, res) => {
@@ -322,38 +293,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       db.createNewsletterSubscriber(email);
       res.json({ success: true, message: "Successfully joined the newsletter!" });
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to subscribe";
-      res.status(400).json({ error: msg });
+    } catch (e) {
+      res.status(400).json({ error: e.message || "Failed to subscribe" });
     }
   });
 
   // ---- AI ENDPOINTS ----
-  const TaskSuggestionSchema = z.array(z.object({
-    title: z.string(),
-    category: z.enum(["personal", "work", "health", "home"]),
-    description: z.string(),
-    estimatedTime: z.number(),
-  }));
-
-  const MealSuggestionSchema = z.array(z.object({
-    meal: z.enum(["breakfast", "lunch", "dinner", "snack"]),
-    title: z.string(),
-    ingredients: z.array(z.string()),
-    calories: z.number(),
-    prepTime: z.number(),
-  }));
-
-  const BudgetTipSchema = z.object({
-    tip: z.string(),
-    category: z.string(),
-    savingsEstimate: z.number(),
-  });
-
   app.post("/api/ai/generate-task", (req, res) => {
     const { prompt } = req.body;
     if (!prompt) return res.status(400).json({ error: "Prompt required" });
-    const mockTasks = [
+    res.json([
       {
         title: "Complete project report",
         category: "work",
@@ -366,12 +315,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: "Evening walk for fresh air",
         estimatedTime: 30,
       },
-    ];
-    res.json(TaskSuggestionSchema.parse(mockTasks));
+    ]);
   });
 
-  app.post("/api/ai/suggest-meal", (_req, res) => {
-    const mockMeals = [
+  app.post("/api/ai/suggest-meal", (req, res) => {
+    res.json([
       {
         meal: "lunch",
         title: "Quinoa Salad",
@@ -379,17 +327,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         calories: 450,
         prepTime: 15,
       },
-    ];
-    res.json(MealSuggestionSchema.parse(mockMeals));
+    ]);
   });
 
-  app.post("/api/ai/budget-tip", (_req, res) => {
-    const mockTip = {
+  app.post("/api/ai/budget-tip", (req, res) => {
+    res.json({
       tip: "Cook at home 3x/week to save $50/month",
       category: "food",
       savingsEstimate: 50,
-    };
-    res.json(BudgetTipSchema.parse(mockTip));
+    });
   });
 
   app.post("/api/ai/chat", (req, res) => {
@@ -399,7 +345,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       reply: "Great idea! Here are some suggestions based on your request. (Demo mode - add your OpenAI key for real AI)",
     });
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
 }
+
+module.exports = { registerRoutes };
